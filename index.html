@@ -59,7 +59,7 @@
   <p style="color:var(--muted);font-size:14px">친구 9명이 벌써 캠퍼스에 들어와 있어요. 같이 공부해요!</p>
   <div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn primary" id="roleS" style="flex:1">🎒 학생 입장</button><button class="btn" id="roleT" style="flex:1">👩‍🏫 선생님 로그인</button></div>
   <input id="nm" maxlength="8" placeholder="닉네임" class="inp">
-  <div id="tForm" style="display:none"><input id="tid" placeholder="선생님 아이디" class="inp" autocomplete="username"><input id="tpw" type="password" placeholder="비밀번호" class="inp" style="margin-top:6px" autocomplete="current-password"><p id="tErr" style="color:#f87171;font-size:12px;margin:6px 0 0;min-height:14px"></p></div>
+  <div id="tForm" style="display:none"><input id="tpw" type="password" placeholder="선생님 비밀번호" class="inp" autocomplete="current-password"><p id="tErr" style="color:#f87171;font-size:12px;margin:6px 0 0;min-height:14px"></p></div>
   <p style="margin:12px 0 6px;font-size:13px">동물 친구 고르기</p>
   <div id="animals" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"></div>
   <p style="margin:12px 0 6px;font-size:13px">옷 색깔</p>
@@ -71,12 +71,11 @@
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-const VERSION = '0.4.0-draft';
-// ===== 선생님 계정 (데모용) =====
+const VERSION = '0.4.1-draft';
+// ===== 선생님 로그인 (데모용) =====
 // 주의: 브라우저 안에서만 확인하는 데모 로그인입니다. 실제 서비스에서는 서버 인증으로 바꿔야 해요.
-const TEACHER_ACCOUNTS = [
-  { id: 'teacher', pw: 'edu-7319', name: '김선생님' },
-];
+const TEACHER_PASSWORD = '1234';
+const TEACHER_NAME = '김선생님';
 let isTeacher = false;
 document.getElementById('ver').textContent = 'v' + VERSION;
 document.getElementById('ver2').textContent = 'EduVerse v' + VERSION;
@@ -438,7 +437,7 @@ function setRole(r) {
   $('nm').style.display = r === 'student' ? 'block' : 'none'; $('tForm').style.display = r === 'teacher' ? 'block' : 'none'; $('go').textContent = r === 'teacher' ? '로그인' : '입장하기';
 }
 $('roleS').onclick = () => setRole('student'); $('roleT').onclick = () => setRole('teacher');
-['tid', 'tpw'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); }));
+$('tpw').addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); });
 function addGlasses(ent) {
   const gl = new THREE.Mesh(new THREE.TorusGeometry(.12, .025, 6, 16), new THREE.MeshBasicMaterial({ color: 0x111111 }));
   [-1, 1].forEach(s => { const c = gl.clone(); c.position.set(s * .19, 2.17, .55); ent.g.add(c); });
@@ -447,9 +446,8 @@ $('go').onclick = () => {
   if (started) return;
   let name;
   if (role === 'teacher') {
-    const acc = TEACHER_ACCOUNTS.find(a => a.id === $('tid').value.trim() && a.pw === $('tpw').value);
-    if (!acc) { $('tErr').textContent = '아이디 또는 비밀번호가 맞지 않아요.'; $('tpw').value = ''; return; }
-    isTeacher = true; name = acc.name; document.body.classList.add('teacher');
+    if ($('tpw').value !== TEACHER_PASSWORD) { $('tErr').textContent = '비밀번호가 맞지 않아요.'; $('tpw').value = ''; return; }
+    isTeacher = true; name = TEACHER_NAME; document.body.classList.add('teacher');
   } else name = $('nm').value.trim() || '학생';
   $('tpw').value = '';
   load(); me = makeAvatar(isTeacher ? 0x334155 : myColor, name + ' (나)', myAnimal); me.name = name; me.score = state.score;

@@ -74,7 +74,7 @@
 <canvas id="c"></canvas>
 <div id="tags"></div>
 <div id="hud" class="panel"><h4>🏫 에듀버스 EduVerse <span class="ver" id="ver"></span></h4>
-  🟢 접속 중 <b id="online">10</b>명 · 📍 <span id="zone">광장</span><br>🕘 <span id="kst" title="한국 표준시">--:--:--</span> <small style="color:#94a3b8">KST</small><br>⭐ 점수 <b id="score">0</b> · 🏅 <span id="badges">-</span>
+  🟢 접속 중 <b id="online">10</b>명 · 📍 <span id="zone">광장</span><br>🕘 <span id="kst" title="한국 표준시">--:--:--</span> <small style="color:#94a3b8">KST</small><br><span id="roomInfo" style="display:none"></span>⭐ 점수 <b id="score">0</b> · 🏅 <span id="badges">-</span>
   <div style="margin-top:6px;display:flex;gap:6px"><span id="role" style="font-size:12px;color:#94a3b8;align-self:center"></span><button class="btn" id="ttBtn" style="font-size:13px">🗓 시간표</button><button class="btn primary teacher-only" id="gather" style="font-size:13px">📢 강의실로 모이기</button><button class="btn teacher-only" id="attBtn" style="font-size:13px">📋 출석부</button><button class="btn teacher-only" id="alarmBtn" style="font-size:13px">⏰ 알람</button></div></div>
 <div id="attend" class="panel" style="top:244px;right:12px;width:230px;font-size:13px;display:none">
   <h4 style="margin:0 0 6px;font-size:13px">📋 출석부 · <span id="attCount">0/10</span></h4>
@@ -98,7 +98,16 @@
   <div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn primary" id="roleS" style="flex:1">🎒 학생 입장</button><button class="btn" id="roleT" style="flex:1">👩‍🏫 선생님 로그인</button></div>
   <input id="nm" maxlength="8" placeholder="닉네임" class="inp">
   <div id="tForm" style="display:none"><input id="tpw" type="password" placeholder="선생님 비밀번호" class="inp" autocomplete="current-password"><p id="tErr" style="color:#f87171;font-size:12px;margin:6px 0 0;min-height:14px"></p></div>
-  <p style="margin:12px 0 6px;font-size:13px">동물 친구 고르기</p>
+  <div id="mpTeacher" style="display:none">
+    <p style="margin:12px 0 6px;font-size:13px">접속 방식 (선생님)</p>
+    <div style="display:flex;gap:6px"><button class="btn primary" id="mpSolo" style="flex:1">🙋 혼자</button><button class="btn" id="mpHost" style="flex:1">🏠 방 만들기</button></div>
+  </div>
+  <div id="mpStudent">
+    <p style="margin:12px 0 6px;font-size:13px">방 코드 <small style="color:var(--muted)">(선생님께 받은 코드 · 없으면 비워 두면 혼자 입장)</small></p>
+    <input id="roomCode" class="inp" placeholder="예: AB12CD" maxlength="6" style="text-transform:uppercase;letter-spacing:3px">
+  </div>
+  <p id="mpErr" style="color:#f87171;font-size:12px;margin:4px 0 0;min-height:14px"></p>
+  <p style="margin:8px 0 6px;font-size:13px">동물 친구 고르기</p>
   <div id="animals" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"></div>
   <p style="margin:12px 0 6px;font-size:13px">옷 색깔</p>
   <div id="colors" style="display:flex;gap:8px;margin:0 0 14px"></div>
@@ -106,10 +115,11 @@
   <p style="font-size:11px;color:var(--muted);text-align:right;margin-bottom:0" id="ver2"></p>
 </div></div>
 
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-const VERSION = '0.8.0-draft';
+const VERSION = '0.9.0-draft';
 // ===== 선생님 로그인 (데모용) =====
 // 주의: 브라우저 안에서만 확인하는 데모 로그인입니다. 실제 서비스에서는 서버 인증으로 바꿔야 해요.
 const TEACHER_PASSWORD = '1234';
@@ -607,11 +617,11 @@ function replyTo(text) {
 }
 $('msg').addEventListener('keydown', e => {
   e.stopPropagation();
-  if (e.key === 'Enter') { const t = $('msg').value.trim(); if (t && me) { addChat(me.name, t, 'me'); say(me, t); replyTo(t); } $('msg').value = ''; $('msg').blur(); }
+  if (e.key === 'Enter') { const t = $('msg').value.trim(); if (t && me) { addChat(me.name, t, 'me'); say(me, t); replyTo(t); netSend({ t: 'chat', id: net.myId, text: t }); } $('msg').value = ''; $('msg').blur(); }
   if (e.key === 'Escape') $('msg').blur();
 });
 document.querySelectorAll('#emotes button').forEach(b => b.onclick = () => emote(b.dataset.e));
-function emote(e) { if (!me) return; say(me, e, 2.5); mates.filter(m => m.g.position.distanceTo(me.g.position) < 14).slice(0, 3).forEach((m, i) => setTimeout(() => say(m, e === '❓' ? '🤔' : e, 2.5), 500 + i * 400)); }
+function emote(e) { if (!me) return; say(me, e, 2.5); netSend({ t: 'emote', id: net.myId, e }); mates.filter(m => m.g.position.distanceTo(me.g.position) < 14).slice(0, 3).forEach((m, i) => setTimeout(() => say(m, e === '❓' ? '🤔' : e, 2.5), 500 + i * 400)); }
 
 // ---------- Score / badges ----------
 function addScore(n, why) { state.score += n; me.score = state.score; $('score').textContent = state.score; if (why) sys(`${why} +${n}점`); save(); }
@@ -646,7 +656,7 @@ $('chPlus').onclick = () => { if (ui.chat < 3) { ui.chat++; applyChat(); } };
 ['rkMinus', 'rkPlus', 'chMinus', 'chPlus'].forEach(id => $(id).addEventListener('click', e => e.currentTarget.blur()));
 function renderRank() {
   if (!me) return;
-  const all = (isTeacher ? [...mates] : [...mates, me]).sort((a, b) => b.score - a.score);
+  const all = (isTeacher ? [...mates, ...realStudents()] : [...mates, ...realStudents(), me]).sort((a, b) => b.score - a.score);
   const myPos = all.indexOf(me);
   $('myRank').textContent = ui.rank === 0 && myPos >= 0 ? `· 나 ${myPos + 1}위` : '';
   let list = all.map((a, i) => ({ a, i }));
@@ -707,14 +717,14 @@ function sitAt(s) { sitting = true; me.g.position.set(s.x, .5, s.z - 1.2); me.g.
 // ---------- Attendance ----------
 const nowStr = () => new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 function markSeat(ent, seated) {
-  if (!ent || ent.seated === seated || (isTeacher && ent === me)) return;
+  if (!ent || ent.seated === seated || (isTeacher && ent === me) || ent.teacher) return;
   ent.seated = seated;
   if (seated && !ent.attTime) { ent.attTime = nowStr(); sys(`📋 ${ANIMALS[ent.animal].emoji} ${ent.name} 출석! (${ent.attTime})`); }
   renderAttend();
 }
 function renderAttend() {
   if (!me) return;
-  const all = isTeacher ? mates : [me, ...mates];
+  const all = isTeacher ? [...realStudents(), ...mates] : [me, ...realStudents(), ...mates];
   $('attCount').textContent = `${all.filter(a => a.attTime).length}/${all.length}`;
   $('attTable').innerHTML = all.map(a => `<tr style="border-bottom:1px solid #1e293b"><td style="padding:3px 0">${ANIMALS[a.animal].emoji} ${a === me ? a.name + ' (나)' : a.name}</td>`
     + `<td style="text-align:right;color:${a.seated ? '#22c55e' : a.attTime ? '#facc15' : '#94a3b8'}">${a.seated ? '✅ 착석' : a.attTime ? '🚶 자리 비움' : '⬜ 미출석'}</td>`
@@ -748,7 +758,7 @@ function gatherToLecture(auto = false) {
   openModal(`<h3>📢 선생님이 강의실로 불렀어요</h3><p>친구들이 강의실로 이동하고 있어요. 어떻게 갈까요?</p><div class="choices"><button class="btn primary" id="tp">✨ 바로 자리로 이동</button><button class="btn" data-close>🚶 직접 걸어갈게요</button></div>`);
   $('tp').onclick = () => { sitAt(SEATS[MY_SEAT]); closeModal(); sys('자리에 앉았어요. (이동하면 일어나요)'); };
 }
-$('gather').onclick = () => gatherToLecture();
+$('gather').onclick = () => { gatherToLecture(); netSend({ t: 'gather', id: net.myId, by: me.name }); };
 
 // ---------- ⚽ 운동장 축구 ----------
 const FIELD = { x0: -37.5, x1: 37.5, z0: 59.6, z1: 92.4, goalX: 34, gz0: 73.3, gz1: 78.7, cz: 76 };
@@ -933,7 +943,8 @@ $('c').addEventListener('wheel', e => { e.preventDefault(); dist = Math.min(ZOOM
 let role = 'student';
 function setRole(r) {
   role = r; $('roleS').className = 'btn' + (r === 'student' ? ' primary' : ''); $('roleT').className = 'btn' + (r === 'teacher' ? ' primary' : '');
-  $('nm').style.display = r === 'student' ? 'block' : 'none'; $('tForm').style.display = r === 'teacher' ? 'block' : 'none'; $('go').textContent = r === 'teacher' ? '로그인' : '입장하기';
+  $('nm').style.display = r === 'student' ? 'block' : 'none'; $('tForm').style.display = r === 'teacher' ? 'block' : 'none';
+  $('mpTeacher').style.display = r === 'teacher' ? 'block' : 'none'; $('mpStudent').style.display = r === 'student' ? 'block' : 'none'; $('mpErr').textContent = ''; $('go').textContent = r === 'teacher' ? '로그인' : '입장하기';
 }
 $('roleS').onclick = () => setRole('student'); $('roleT').onclick = () => setRole('teacher');
 $('tpw').addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); });
@@ -941,8 +952,18 @@ function addGlasses(ent) {
   const gl = new THREE.Mesh(new THREE.TorusGeometry(.12, .025, 6, 16), new THREE.MeshBasicMaterial({ color: 0x111111 }));
   [-1, 1].forEach(s => { const c = gl.clone(); c.position.set(s * .19, 2.17, .55); ent.g.add(c); });
 }
+// 접속 방식: 선생님만 혼자/방 만들기를 고르고, 학생은 방 코드만 입력 (비우면 혼자)
+let mpMode = 'solo', teacherMp = 'solo';
+function setTeacherMp(m) { teacherMp = m; $('mpSolo').className = 'btn' + (m === 'solo' ? ' primary' : ''); $('mpHost').className = 'btn' + (m === 'host' ? ' primary' : ''); $('mpErr').textContent = ''; }
+$('mpSolo').onclick = () => setTeacherMp('solo'); $('mpHost').onclick = () => setTeacherMp('host');
+$('roomCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); });
+{ const q = new URLSearchParams(location.search).get('room'); if (q && /^[A-Za-z0-9]{6}$/.test(q)) $('roomCode').value = q.toUpperCase(); }
 $('go').onclick = () => {
   if (started) return;
+  const code = $('roomCode').value.trim().toUpperCase();
+  mpMode = role === 'teacher' ? teacherMp : code ? 'join' : 'solo';
+  if (mpMode === 'join' && !/^[A-Z0-9]{6}$/.test(code)) { $('mpErr').textContent = '방 코드 6자리를 입력해 주세요.'; return; }
+  if (mpMode !== 'solo' && typeof Peer === 'undefined') { $('mpErr').textContent = '같이 접속 기능을 불러오지 못했어요. 인터넷 연결을 확인하거나 "혼자"로 들어가 주세요.'; return; }
   let name;
   if (role === 'teacher') {
     if ($('tpw').value !== TEACHER_PASSWORD) { $('tErr').textContent = '비밀번호가 맞지 않아요.'; $('tpw').value = ''; return; }
@@ -969,8 +990,120 @@ $('go').onclick = () => {
     setTimeout(() => mateSay(mates[0], '같이 강의실 가자! 곧 수업 시작해'), 3500);
     autoGatherT = 60; // 학생 모드: AI 선생님이 주기적으로 소집
   }
+  if (mpMode !== 'solo') startNet(mpMode, code);
+  updateOnline();
 };
 let autoGatherT = Infinity;
+
+// ---------- 👥 같이 접속 (PeerJS P2P · 방장이 중계) ----------
+// 방장이 'eduverse-방코드' 아이디로 방을 열고, 참가자는 방장에게 연결해요. 방장이 모든 메시지를 다른 사람에게 전달해요.
+// 각 브라우저의 AI 친구·우주인·축구 경기는 따로 움직이고, 실제 사람의 위치·채팅·이모트·착석, 선생님의 모으기·알람이 공유돼요.
+const net = { mode: 'solo', peer: null, conns: new Map(), hostConn: null, myId: null, code: '', remotes: new Map(), sendT: 0 };
+const PEER_PREFIX = 'eduverse-';
+function genCode() { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({ length: 6 }, () => c[Math.floor(Math.random() * c.length)]).join(''); }
+function myInfo() { return { id: net.myId, name: me.name, animal: me.animal, color: me.color, teacher: isTeacher }; }
+function netSend(msg) {
+  const s = JSON.stringify(msg);
+  if (net.mode === 'host') { for (const c of net.conns.values()) if (c.open) c.send(s); }
+  else if (net.mode === 'guest' && net.hostConn && net.hostConn.open) net.hostConn.send(s);
+}
+function hostRelay(msg, except) { if (net.mode !== 'host') return; const s = JSON.stringify(msg); for (const [id, c] of net.conns) if (id !== except && c.open) c.send(s); }
+function realStudents() { return [...net.remotes.values()].filter(r => !r.teacher); }
+function updateOnline() {
+  const humans = 1 + net.remotes.size;
+  $('online').textContent = humans + mates.length;
+  const ri = $('roomInfo');
+  if (net.mode === 'solo' || !net.code) { ri.style.display = 'none'; return; }
+  ri.style.display = 'inline';
+  ri.innerHTML = `🔗 방 <b>${net.code}</b> · 실제 접속 ${humans}명 <button class="mb" id="copyRoom">링크 복사</button><br>`;
+  $('copyRoom').onclick = e => {
+    e.currentTarget.blur();
+    const link = location.href.split(/[?#]/)[0] + '?room=' + net.code;
+    const done = () => toast('🔗 초대 링크를 복사했어요! 친구에게 보내 주세요');
+    try { navigator.clipboard.writeText(link).then(done, () => prompt('이 링크를 복사해서 보내 주세요', link)); } catch (err) { prompt('이 링크를 복사해서 보내 주세요', link); }
+  };
+}
+function addRemote(info) {
+  if (!info || info.id === net.myId || net.remotes.has(info.id)) return;
+  const r = makeAvatar(info.color, (info.teacher ? '👩‍🏫 ' : '🟢 ') + info.name, info.animal);
+  Object.assign(r, { name: info.name, info, remote: true, teacher: !!info.teacher, netId: info.id, tx: 0, tz: 8, ty: 0, tr: 0, mv: 0 });
+  r.g.position.set(0, 0, 8);
+  if (info.teacher) addGlasses(r);
+  net.remotes.set(info.id, r);
+  sys(`🟢 ${info.teacher ? info.name + ' 선생님' : info.name + '님'}이 들어왔어요 (실제 접속)`);
+  updateOnline(); renderAttend();
+}
+function removeRemote(id) {
+  const r = net.remotes.get(id); if (!r) return;
+  scene.remove(r.g); r.tag.remove(); net.remotes.delete(id);
+  sys(`⚪ ${r.name}님이 나갔어요`); updateOnline(); renderAttend();
+}
+function handleMsg(msg, fromId) {
+  const r = net.remotes.get(msg.id);
+  switch (msg.t) {
+    case 'hello':
+      addRemote(msg.info);
+      if (net.mode === 'host') {
+        const c = net.conns.get(fromId);
+        if (c && c.open) c.send(JSON.stringify({ t: 'welcome', players: [myInfo(), ...[...net.remotes.values()].filter(x => x.netId !== msg.info.id).map(x => x.info)] }));
+        hostRelay(msg, fromId);
+      }
+      break;
+    case 'welcome': msg.players.forEach(addRemote); break;
+    case 'st':
+      if (r) { r.tx = msg.x; r.tz = msg.z; r.ty = msg.y; r.tr = msg.r; r.mv = msg.mv; r.score = msg.sc || 0; if (!!r.seated !== !!msg.s) markSeat(r, !!msg.s); }
+      hostRelay(msg, fromId); break;
+    case 'chat': if (r) { addChat('🟢 ' + r.name, msg.text); say(r, msg.text); } hostRelay(msg, fromId); break;
+    case 'emote': if (r) say(r, msg.e, 2.5); hostRelay(msg, fromId); break;
+    case 'gather': if (!isTeacher) { sys(`📢 ${msg.by} 선생님이 강의실로 불렀어요!`); gatherToLecture(); } hostRelay(msg, fromId); break;
+    case 'alarm': if (!isTeacher) fireAlarm(msg.msg, msg.gather, msg.hm, true); hostRelay(msg, fromId); break;
+    case 'bye': removeRemote(msg.id); hostRelay(msg, fromId); break;
+  }
+}
+function wireConn(c) {
+  c.on('data', d => { try { handleMsg(typeof d === 'string' ? JSON.parse(d) : d, c.peer); } catch (e) { } });
+}
+function startNet(mode, code) {
+  net.mode = mode === 'join' ? 'guest' : 'host';
+  if (net.mode === 'host') {
+    net.code = code || genCode();
+    net.peer = new Peer(PEER_PREFIX + net.code);
+    net.peer.on('open', id => { net.myId = id; updateOnline(); toast(`🏠 방 코드 ${net.code} · 왼쪽 위 "링크 복사"로 친구를 초대하세요`); sys(`🏠 방을 만들었어요! 방 코드: ${net.code} — 학생이 입장 화면의 "방 코드" 칸에 이 코드를 넣으면 같이 수업할 수 있어요`); });
+    net.peer.on('connection', c => {
+      c.on('open', () => net.conns.set(c.peer, c));
+      wireConn(c);
+      c.on('close', () => { net.conns.delete(c.peer); removeRemote(c.peer); hostRelay({ t: 'bye', id: c.peer }); });
+    });
+    net.peer.on('error', e => {
+      if (e.type === 'unavailable-id') { net.peer.destroy(); sys('같은 방 코드가 이미 있어서 새 코드로 다시 만들어요'); startNet('host'); }
+      else sys('⚠️ 연결 오류: ' + e.type);
+    });
+  } else {
+    net.code = code;
+    net.peer = new Peer();
+    net.peer.on('open', id => {
+      net.myId = id;
+      const c = net.peer.connect(PEER_PREFIX + code, { reliable: true }); net.hostConn = c;
+      c.on('open', () => { c.send(JSON.stringify({ t: 'hello', info: myInfo() })); sys(`🔗 방 ${code}에 들어왔어요!`); toast(`🔗 방 ${code} 접속 완료!`); updateOnline(); });
+      wireConn(c);
+      c.on('close', () => { sys('⚠️ 방장과 연결이 끊어졌어요. 혼자 모드로 계속해요'); for (const id of [...net.remotes.keys()]) removeRemote(id); net.mode = 'solo'; updateOnline(); });
+    });
+    net.peer.on('error', e => sys(e.type === 'peer-unavailable' ? `⚠️ 방 ${code}을(를) 찾을 수 없어요. 코드를 확인하거나 방장이 접속해 있는지 확인해 주세요` : '⚠️ 연결 오류: ' + e.type));
+  }
+  addEventListener('beforeunload', () => { try { netSend({ t: 'bye', id: net.myId }); net.peer.destroy(); } catch (e) { } });
+}
+function updateNet(dt) {
+  if (net.mode !== 'solo' && net.myId) {
+    net.sendT -= dt;
+    if (net.sendT < 0) { net.sendT = .1; const p = me.g.position; netSend({ t: 'st', id: net.myId, x: +p.x.toFixed(2), z: +p.z.toFixed(2), y: +p.y.toFixed(2), r: +me.g.rotation.y.toFixed(2), mv: (me.vx || me.vz) ? 1 : 0, s: sitting ? 1 : 0, sc: state.score }); }
+  }
+  const k = 1 - Math.exp(-12 * dt);
+  for (const r of net.remotes.values()) {
+    const p = r.g.position; p.x += (r.tx - p.x) * k; p.z += (r.tz - p.z) * k; p.y += (r.ty - p.y) * k;
+    let dr = r.tr - r.g.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); r.g.rotation.y += dr * k;
+    animWalk(r, !!r.mv, dt);
+  }
+}
 $('nm').addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); });
 
 // ---------- Loop ----------
@@ -1054,7 +1187,7 @@ function drawMini() {
   mini.fillStyle = '#fff'; mini.strokeStyle = '#111'; mini.lineWidth = 1; mini.beginPath(); mini.arc(X(ball.position.x), Z(ball.position.z), 2.5, 0, 7); mini.fill(); mini.stroke(); // 축구공
   for (const a of astronauts) { mini.fillStyle = 'rgba(226,232,240,.75)'; mini.fillRect(X(a.g.position.x) - 1.5, Z(a.g.position.z) - 1.5, 3, 3); } // 우주인
   // 사람 이름 (작은 지도에서는 점만)
-  const people = [...mates, ...(teacher && teacher !== me ? [teacher] : [])];
+  const people = [...mates, ...(teacher && teacher !== me ? [teacher] : []), ...net.remotes.values()];
   for (const m of people) { const px = X(m.g.position.x), pz = Z(m.g.position.z); mini.fillStyle = hex(m.color); mini.beginPath(); mini.arc(px, pz, 3 * Math.max(.7, f), 0, 7); mini.fill(); if (S >= 160) label(m.name, px, pz - 7, 8); }
   if (me) { const px = X(me.g.position.x), pz = Z(me.g.position.z); mini.fillStyle = '#fff'; mini.strokeStyle = '#38bdf8'; mini.lineWidth = 2; mini.beginPath(); mini.arc(px, pz, 4.5, 0, 7); mini.fill(); mini.stroke(); label('나', px, pz - 9, zf, '#38bdf8'); }
 }
@@ -1126,7 +1259,8 @@ function chime() {
 }
 let toastTimer = 0;
 function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 6000); }
-function fireAlarm(msg, gather, hm) {
+function fireAlarm(msg, gather, hm, fromNet = false) {
+  if (isTeacher && !fromNet) netSend({ t: 'alarm', id: net.myId, msg, gather, hm }); // 실제 접속한 학생들에게도 알람
   chime(); toast(`⏰ ${hm} · ${msg}`);
   if (teacher) say(teacher, `⏰ ${msg}`, 6);
   sys(`⏰ [한국시간 ${hm}] ${teacher ? teacher.name : '선생님'}: ${msg}`);
@@ -1209,6 +1343,7 @@ function tick() {
     animWalk(me, moving, dt);
     updateMates(dt);
     updateSoccer(dt);
+    updateNet(dt);
     // camera
     const tp = me.g.position;
     camera.position.set(tp.x + Math.sin(yaw) * Math.cos(pitch) * dist, tp.y + Math.sin(pitch) * dist + 1.5, tp.z + Math.cos(yaw) * Math.cos(pitch) * dist);
@@ -1227,7 +1362,7 @@ function tick() {
     rankT -= dt; if (rankT < 0) { rankT = 1; renderRank(); drawMini(); }
     // tags
     autoGatherT -= dt; if (autoGatherT < 0) { autoGatherT = 180; if (!soccer.on) gatherToLecture(); }
-    for (const ent of new Set([me, teacher, ...mates])) {
+    for (const ent of new Set([me, teacher, ...mates, ...net.remotes.values()])) {
       tmpV.copy(ent.g.position); tmpV.y += 2.7; tmpV.project(camera);
       const vis = tmpV.z < 1 && ent.g.position.distanceTo(camera.position) < 45;
       ent.tag.style.display = vis ? 'block' : 'none';

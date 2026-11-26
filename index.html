@@ -156,7 +156,7 @@
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-const VERSION = '1.3.0-draft';
+const VERSION = '1.3.1-draft';
 // ===== 선생님 로그인 (데모용) =====
 // 주의: 브라우저 안에서만 확인하는 데모 로그인입니다. 실제 서비스에서는 서버 인증으로 바꿔야 해요.
 const TEACHER_PASSWORD = '1234';
@@ -1246,8 +1246,16 @@ addEventListener('pointermove', e => { if (!drag || e.pointerType === 'touch') r
 
 // ---------- 📱 모바일 터치 조작 ----------
 // 한 손가락 드래그 = 가상 조이스틱 이동 · 짧게 탭 = 그 지점으로 이동 · 두 손가락 드래그 = 시점 회전 · 벌리기/오므리기 = 줌
-const IS_TOUCH = matchMedia('(pointer: coarse)').matches; // 주 입력이 손가락인 기기(폰·태블릿)만. 터치스크린 노트북은 마우스 조작 그대로
-if (IS_TOUCH) $('help').textContent = '한 손가락 드래그 이동 · 탭 이동 · 두 손가락 시점/줌 · 버튼 눌러 상호작용';
+// 주 입력이 손가락인 기기(폰·태블릿)면 터치 화면으로. 처음 판별을 놓쳐도 손가락이 처음 닿는 순간 켜져요
+let IS_TOUCH = false;
+function enableTouchUI() {
+  if (IS_TOUCH) return; IS_TOUCH = true; document.body.classList.add('touch');
+  $('help').textContent = '한 손가락 드래그 이동 · 탭 이동 · 두 손가락 시점/줌 · 버튼 눌러 상호작용';
+}
+const coarseMQ = matchMedia('(pointer: coarse)');
+if (coarseMQ.matches) enableTouchUI();
+coarseMQ.addEventListener?.('change', e => { if (e.matches) enableTouchUI(); });
+addEventListener('pointerdown', e => { if (e.pointerType === 'touch') enableTouchUI(); }, { capture: true });
 const touches = new Map(), joy = { on: false, x: 0, y: 0, sx: 0, sy: 0, id: null, t: 0, moved: false };
 const JOY_R = 60;
 let pinch = null;
@@ -1289,7 +1297,6 @@ function touchEnd(e) {
 }
 $('c').addEventListener('pointerup', touchEnd); $('c').addEventListener('pointercancel', touchEnd);
 // 화면 조작키: 고정 조이스틱 + 버튼들
-if (IS_TOUCH) document.body.classList.add('touch');
 let runOn = false, camRot = 0;
 {
   const pad = $('pad'), knob = $('padKnob'), R = 50; let pid = null;

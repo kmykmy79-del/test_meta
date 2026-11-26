@@ -50,6 +50,9 @@
   #prompt{position:fixed;bottom:74px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#fde68a,#f9a8d4);color:#1e1b4b;padding:7px 14px;border-radius:999px;font-weight:700;display:none;box-shadow:0 0 18px rgba(253,230,138,.7)}
   #toast{position:fixed;top:14px;left:50%;transform:translate(-50%,-140%);z-index:20;padding:10px 20px;border-radius:999px;font-weight:700;color:#0b0820;background:linear-gradient(135deg,#67e8f9,#c084fc,#fde68a);box-shadow:0 0 24px rgba(192,132,252,.8);transition:transform .45s cubic-bezier(.2,1.4,.4,1);white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
   #toast.show{transform:translate(-50%,0)}
+  #soccerBoard{top:64px;left:50%;transform:translateX(-50%);display:none;text-align:center;font-size:18px;font-weight:700;padding:8px 18px;white-space:nowrap}
+  #soccerBoard .tb b{color:#60a5fa;text-shadow:0 0 10px #3b82f6} #soccerBoard .tr b{color:#f87171;text-shadow:0 0 10px #ef4444}
+  #sbTime{margin-left:10px;font-size:14px;color:var(--gold)} #sbHint{font-size:11px;font-weight:400;color:var(--muted);margin-top:2px}
   #tags{position:fixed;inset:0;pointer-events:none}
   .tag{position:absolute;transform:translate(-50%,-100%);text-align:center;white-space:nowrap}
   .tag .nm{font-size:12px;background:rgba(10,7,38,.7);border:1px solid rgba(165,180,252,.35);padding:1px 7px;border-radius:999px;box-shadow:0 0 8px rgba(129,140,248,.4)}
@@ -87,6 +90,7 @@
 <div id="emotes" class="panel"><button data-e="👋">👋</button><button data-e="👏">👏</button><button data-e="❓">❓</button><button data-e="❤️">❤️</button></div>
 <div id="prompt"></div>
 <div id="toast"></div>
+<div id="soccerBoard" class="panel"><span class="tb">🔵 파랑 <b id="sbB">0</b></span> : <span class="tr"><b id="sbR">0</b> 빨강 🔴</span> <span id="sbTime">3:00</span><div id="sbHint">공에 닿으면 드리블 · <b>Space</b> 슛 · 파랑팀은 오른쪽 골대로!</div></div>
 <div id="modal" class="modal"><div class="box" id="mbox"></div></div>
 <div id="start" class="modal"><div class="box">
   <h3 style="font-size:22px">🪐 에듀버스에 오신 걸 환영해요 ✨</h3>
@@ -105,7 +109,7 @@
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-const VERSION = '0.7.1-draft';
+const VERSION = '0.8.0-draft';
 // ===== 선생님 로그인 (데모용) =====
 // 주의: 브라우저 안에서만 확인하는 데모 로그인입니다. 실제 서비스에서는 서버 인증으로 바꿔야 해요.
 const TEACHER_PASSWORD = '1234';
@@ -552,6 +556,7 @@ function personaLine(m, kind, f) {
 // 혼잣말 · 장소 이야기 · 친구끼리 대화를 섞어서
 function mateChatter() {
   const m = pick(mates), P = PERSONAS[m.name], z = zoneOf(m.g.position.x, m.g.position.z), zk = z ? z.key : 'plaza', r = Math.random();
+  if (soccer.on && m.team != null) { mateSay(m, pick(m.home.gk ? ['내가 다 막는다 🧤', '수비 집중!!', '골대는 내가 지킨다!'] : ['패스 패스!!', '여기 비었어!', '슛 때려!! ⚽', '수비 내려와!', '나한테 줘~!', `${me.name} 앞으로!`])); return; }
   if (r < .3) {
     const others = mates.filter(o => o !== m), f = others.sort((a, b) => a.g.position.distanceTo(m.g.position) - b.g.position.distanceTo(m.g.position))[0];
     const i = Math.floor(Math.random() * P.ask.length);
@@ -719,6 +724,7 @@ function showAttend(on) { $('attend').style.display = on ? 'block' : 'none'; ren
 $('attBtn').onclick = () => { showAttend($('attend').style.display === 'none'); $('attBtn').blur(); };
 function gatherToLecture(auto = false) {
   if (!me) return;
+  if (soccer.on) endSoccer('수업 시간이 되어 경기를 마쳤어요');
   $('gather').blur();
   say(teacher, '여러분~ 수업 시작해요! 강의실로 모여주세요 📢', 6);
   sys(`👩‍🏫 ${teacher.name}: 수업 시작합니다! 모두 강의실로 모여주세요`);
@@ -744,6 +750,164 @@ function gatherToLecture(auto = false) {
 }
 $('gather').onclick = () => gatherToLecture();
 
+// ---------- ⚽ 운동장 축구 ----------
+const FIELD = { x0: -37.5, x1: 37.5, z0: 59.6, z1: 92.4, goalX: 34, gz0: 73.3, gz1: 78.7, cz: 76 };
+const bv = { x: 0, z: 0 }; // 공 속도
+const soccer = { on: false, score: [0, 0], time: 180, pause: 0, chaseT: 0, lastTouch: null, myGoals: 0, resetT: 0 };
+let wasBreak = false;
+const kickMark = new THREE.Mesh(new THREE.RingGeometry(.9, 1.2, 28), new THREE.MeshBasicMaterial({ color: 0x67e8f9, side: THREE.DoubleSide, transparent: true }));
+kickMark.rotation.x = -Math.PI / 2; kickMark.position.set(0, .07, 61.5); scene.add(kickMark);
+plate('⚽ 축구 경기 (E)', 0, 3.2, 58.6, 6, '#0e7490');
+INTERACTS.push({ x: 0, z: 61.5, get label() { return soccer.on ? 'E: ⚽ 경기 그만하기' : 'E: ⚽ 축구 경기 시작 (5:5)'; }, act: () => soccer.on ? endSoccer('경기를 중단했어요') : startSoccer() });
+const BLUE_HOME = [{ x: -29, z: 76, gk: true }, { x: -19, z: 68 }, { x: -19, z: 84 }, { x: -8, z: 72 }];
+const RED_HOME = [{ x: 29, z: 76, gk: true }, { x: 19, z: 68 }, { x: 19, z: 84 }, { x: 8, z: 70 }, { x: 8, z: 82 }];
+const teamName = t => t === 0 ? '🔵 파랑팀' : '🔴 빨강팀';
+function resetBall(x = 0, z = FIELD.cz) { ball.position.set(x, .35, z); bv.x = bv.z = 0; }
+function isBreakTime(k) {
+  if (k.day < 1 || k.day > 5) return false;
+  const mins = k.h * 60 + k.m;
+  for (let i = 0; i < PERIODS.length; i++) {
+    const p = PERIODS[i];
+    if (p[0] === '점심' && mins >= toMin(p[1]) && mins < toMin(p[2])) return true;
+    const nx = PERIODS[i + 1]; if (nx && mins >= toMin(p[2]) && mins < toMin(nx[1])) return true;
+  }
+  return false;
+}
+function soccerInvite() {
+  if (!me) return;
+  chime(); toast('⚽ 쉬는 시간! 운동장에서 축구 한 판 어때요?');
+  sys('⚽ 쉬는 시간이에요! 운동장의 "축구 경기" 표지판 앞에서 E를 누르면 5:5 경기가 시작돼요');
+  const inviters = [...mates].sort(() => Math.random() - .5).slice(0, 4);
+  inviters.forEach((m, i) => setTimeout(() => {
+    if (soccer.on) return;
+    m.g.position.y = 0; markSeat(m, false); m.wait = 0; m.target = { x: rnd(-20, 20), z: rnd(64, 88) };
+    if (i < 2) mateSay(m, pick(['쉬는 시간이다! 축구하자 ⚽', `${me.name}! 운동장 ㄱㄱ`, '공 차러 갈 사람~!', '5:5 한 판 어때?']));
+  }, 400 + i * 900));
+}
+function setTeamGlow(ent, team) { const nm = ent.tag.querySelector('.nm'); nm.style.boxShadow = team == null ? '' : `0 0 10px ${team === 0 ? '#3b82f6' : '#ef4444'}`; nm.style.borderColor = team == null ? '' : (team === 0 ? '#60a5fa' : '#f87171'); }
+function startSoccer() {
+  if (soccer.on || !me) return;
+  Object.assign(soccer, { on: true, score: [0, 0], time: 180, pause: 3, chaseT: 0, lastTouch: null, myGoals: 0 });
+  sitting = false; markSeat(me, false);
+  const pool = [...mates].sort(() => Math.random() - .5);
+  pool.forEach((m, i) => {
+    m.team = i < 4 ? 0 : i < 9 ? 1 : null; if (m.team == null) return;
+    m.home = m.team === 0 ? BLUE_HOME[i] : RED_HOME[i - 4];
+    m.g.position.set(m.home.x, 0, m.home.z); markSeat(m, false); m.kickCd = 0; m.chaser = false;
+    setTeamGlow(m, m.team);
+  });
+  me.team = 0; setTeamGlow(me, 0);
+  me.g.position.set(-3, 0, FIELD.cz); me.g.rotation.y = Math.PI / 2; yaw = -Math.PI / 2; pitch = .45; dist = Math.max(dist, 13);
+  resetBall();
+  $('soccerBoard').style.display = 'block'; updateBoard();
+  chime(); toast('⚽ 경기 시작! 3분 · 먼저 3골 넣는 팀이 이겨요');
+  sys(`⚽ 5:5 축구 경기 시작! 나는 ${teamName(0)} (오른쪽 골대를 공격해요). 공에 닿으면 드리블, Space로 슛!`);
+  pool.filter(m => m.team != null).slice(0, 3).forEach((m, i) => setTimeout(() => mateSay(m, pick(m.team === 0 ? ['파랑팀 파이팅!! 💙', `${me.name} 패스 줄게!`, '이기자!!'] : ['빨강팀이 이긴다 🔥', '봐주는 거 없다 ㅋㅋ', '수비 단단히!'])), 600 + i * 900));
+}
+function endSoccer(reason) {
+  if (!soccer.on) return;
+  soccer.on = false; $('soccerBoard').style.display = 'none';
+  const [b, r] = soccer.score, res = b > r ? 0 : r > b ? 1 : -1;
+  sys(`⚽ ${reason} · 최종 ${b} : ${r} ${res < 0 ? '무승부!' : teamName(res) + ' 승리!'}`);
+  toast(`⚽ ${b} : ${r} ${res < 0 ? '무승부 🤝' : teamName(res) + ' 승리 🏆'}`);
+  if (res === 0) { addScore(20, '축구 승리 🏆'); if (soccer.myGoals > 0) badge('⚽축구왕'); }
+  for (const m of mates) { if (m.team == null) continue; setTeamGlow(m, null); m.team = null; m.target = randomTarget(m); m.wait = rnd(1, 3); m.speed = m.baseSpeed; }
+  me.team = null; setTeamGlow(me, null);
+  const m = pick(mates); setTimeout(() => mateSay(m, res === 0 ? '파랑팀 최고!! 다음에 또 하자 ⚽' : res === 1 ? '빨강팀 승리~ 다음 쉬는 시간에 재대결!' : '무승부! 다음엔 꼭 이긴다'), 900);
+}
+function updateBoard() { $('sbB').textContent = soccer.score[0]; $('sbR').textContent = soccer.score[1]; const t = Math.max(0, Math.ceil(soccer.time)); $('sbTime').textContent = `⏱ ${Math.floor(t / 60)}:${pad2(t % 60)}`; }
+function kickBall() {
+  if (!me) return;
+  const p = me.g.position, d = Math.hypot(ball.position.x - p.x, ball.position.z - p.z);
+  if (d > 2.2) return;
+  const ry = me.g.rotation.y; bv.x = Math.sin(ry) * 22; bv.z = Math.cos(ry) * 22;
+  soccer.lastTouch = me; say(me, '슛~! ⚽', 1.5);
+}
+function goalScored(team) {
+  soccer.score[team]++; soccer.pause = 2.5; updateBoard(); chime();
+  const s = soccer.lastTouch, who = s ? (s === me ? me.name : s.name) : '누군가';
+  const own = s && s.team != null && s.team !== team;
+  toast(`⚽ 골~~!! ${teamName(team)} ${own ? '(자책골 😅)' : '· ' + who}`);
+  sys(`⚽ 골! ${teamName(team)} ${own ? `${who} 자책골` : who} · ${soccer.score[0]} : ${soccer.score[1]}`);
+  if (s === me && !own) { soccer.myGoals++; addScore(10, '골!'); }
+  mates.filter(m => m.team != null).sort(() => Math.random() - .5).slice(0, 2).forEach((m, i) => setTimeout(() => mateSay(m, pick(m.team === team ? ['골~~~!! ⚽🎉', '나이스 슛!!', '우리 팀 최고!', `${who} 대박!!`] : ['아 아깝다 ㅠㅠ', '다음엔 막는다!', '괜찮아 다시 가자!'])), 500 + i * 900));
+  setTimeout(() => { if (!soccer.on) return; resetBall(); for (const m of mates) if (m.team != null) m.g.position.set(m.home.x, 0, m.home.z); me.g.position.set(-3, 0, FIELD.cz); }, 1800);
+  if (soccer.score[team] >= 3) setTimeout(() => endSoccer('3골 먼저!'), 2200);
+}
+function soccerAI(m, dt) {
+  const p = m.g.position, b = ball.position, goalX = m.team === 0 ? FIELD.goalX : -FIELD.goalX;
+  let tx = m.home.x, tz = m.home.z, sp = 3.6;
+  m.kickCd -= dt;
+  if (soccer.pause <= 0) {
+    if (m.home.gk) { // 골키퍼: 골대 앞에서 공 따라 좌우로
+      tz = Math.max(FIELD.gz0 + .3, Math.min(FIELD.gz1 - .3, b.z)); tx = m.home.x;
+      if (Math.abs(b.x - m.home.x) < 7) { tx = b.x; tz = b.z; sp = 5; }
+    } else if (m.chaser) { // 공 뒤로 돌아가서 골대 쪽으로 차기
+      const gx = goalX - b.x, gz = FIELD.cz - b.z, gl = Math.hypot(gx, gz) || 1;
+      tx = b.x - gx / gl * .8; tz = b.z - gz / gl * .8; sp = 5.2;
+    } else { tx = m.home.x * .6 + b.x * .4; tz = m.home.z * .7 + b.z * .3; }
+    if (Math.hypot(b.x - p.x, b.z - p.z) < 1.3 && m.kickCd <= 0) {
+      const gx = goalX - b.x, gz = FIELD.cz + rnd(-2.2, 2.2) - b.z, near = Math.hypot(gx, gz) < 20;
+      const ang = Math.atan2(gz, gx) + rnd(-.3, .3), pw = m.home.gk ? rnd(16, 22) : near ? rnd(15, 21) : rnd(8, 12);
+      bv.x = Math.cos(ang) * pw; bv.z = Math.sin(ang) * pw; soccer.lastTouch = m; m.kickCd = rnd(.6, 1.1);
+    }
+  }
+  const dx = tx - p.x, dz = tz - p.z, d = Math.hypot(dx, dz);
+  m.vx = m.vz = 0;
+  if (d > .15) { const s = Math.min(d, sp * dt); p.x += dx / d * s; p.z += dz / d * s; m.vx = dx / d * sp; m.vz = dz / d * sp; m.g.rotation.y = Math.atan2(dx, dz); collide(p); }
+  p.y = 0; animWalk(m, d > .15, dt);
+}
+function updateSoccer(dt) {
+  const b = ball.position;
+  // 사람과 공의 접촉 (드리블)
+  if (soccer.pause <= 0) for (const e of [me, ...mates]) {
+    const ex = b.x - e.g.position.x, ez = b.z - e.g.position.z, d = Math.hypot(ex, ez);
+    if (d < .9 && d > 0) {
+      const sp = Math.max(Math.hypot(e.vx || 0, e.vz || 0) * 1.35, 3);
+      bv.x = ex / d * sp; bv.z = ez / d * sp; b.x = e.g.position.x + ex / d * .9; b.z = e.g.position.z + ez / d * .9; soccer.lastTouch = e;
+    }
+  }
+  // 굴러가기
+  b.x += bv.x * dt; b.z += bv.z * dt;
+  const fr = Math.exp(-1.1 * dt); bv.x *= fr; bv.z *= fr;
+  ball.rotation.x += bv.z * dt / .35; ball.rotation.z -= bv.x * dt / .35;
+  // 운동장 안에 있을 때만 골·벽 처리
+  const inField = b.z > FIELD.z0 - 3 && b.z < FIELD.z1 + 3 && b.x > FIELD.x0 - 3 && b.x < FIELD.x1 + 3;
+  if (inField) {
+    const inMouth = b.z > FIELD.gz0 && b.z < FIELD.gz1;
+    if (Math.abs(b.x) > FIELD.goalX && inMouth) {
+      if (Math.abs(b.x) > FIELD.goalX + 1.4) { // 골망에 들어감
+        if (soccer.on && soccer.pause <= 0) goalScored(b.x > 0 ? 0 : 1);
+        else if (!soccer.on && soccer.resetT <= 0) { soccer.resetT = 1.5; const m = pick(mates); if (me && me.g.position.distanceTo(b) < 25) mateSay(m, pick(['골인~!! ⚽', '오 슛 좋다!', '경기 하자 경기!'])); }
+        b.x = Math.sign(b.x) * (FIELD.goalX + 1.4); bv.x = 0; bv.z *= .3;
+      }
+    } else {
+      if (Math.abs(b.x) > FIELD.goalX && Math.abs(b.x - bv.x * dt) <= FIELD.goalX) { bv.x *= -.6; b.x = Math.sign(b.x) * FIELD.goalX; }
+      if (b.z < FIELD.z0) { b.z = FIELD.z0; bv.z = Math.abs(bv.z) * .6; }
+      if (b.z > FIELD.z1) { b.z = FIELD.z1; bv.z = -Math.abs(bv.z) * .6; }
+    }
+  }
+  b.x = Math.max(-WORLD + 2, Math.min(WORLD - 2, b.x)); b.z = Math.max(-WORLD + 2, Math.min(WORLD - 2, b.z));
+  if (soccer.resetT > 0) { soccer.resetT -= dt; if (soccer.resetT <= 0) resetBall(); }
+  kickMark.material.opacity = soccer.on ? .25 : .5 + Math.sin(clock.elapsedTime * 4) * .4;
+  if (!soccer.on) return;
+  // 경기 진행
+  if (soccer.pause > 0) soccer.pause -= dt; else soccer.time -= dt;
+  soccer.chaseT -= dt;
+  if (soccer.chaseT < 0) { // 팀마다 공에 가장 가까운 필드 선수가 쫓아가기
+    soccer.chaseT = .5;
+    for (const t of [0, 1]) {
+      const field = mates.filter(m => m.team === t && !m.home.gk);
+      field.forEach(m => m.chaser = false);
+      field.sort((a, c) => a.g.position.distanceTo(b) - c.g.position.distanceTo(b));
+      if (field[0]) field[0].chaser = true;
+      if (t === 1 && field[1] && Math.random() < .5) field[1].chaser = true; // 빨강팀은 가끔 둘이 압박
+    }
+  }
+  updateBoard();
+  if (soccer.time <= 0) endSoccer('경기 종료 휘슬! 📣');
+}
+
 // ---------- Input ----------
 const keys = {};
 addEventListener('keydown', e => {
@@ -753,6 +917,7 @@ addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
   keys[e.code] = true;
   if (e.code === 'KeyE' && !modalOpen && nearI) nearI.act();
+  if (e.code === 'Space') { e.preventDefault(); if (!modalOpen) kickBall(); }
   if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(e.code)) emote(['👋', '👏', '❓', '❤️'][+e.key - 1]);
 });
 addEventListener('keyup', e => keys[e.code] = false);
@@ -828,6 +993,7 @@ function animWalk(ent, moving, dt) {
 }
 function updateMates(dt) {
   for (const m of mates) {
+    if (soccer.on && m.team != null) { soccerAI(m, dt); continue; }
     const p = m.g.position, t = m.target;
     if (m.wait > 0) { m.wait -= dt; animWalk(m, false, dt); if (m.wait <= 0) { m.target = randomTarget(m); p.y = 0; markSeat(m, false); } continue; }
     const dx = t.x - p.x, dz = t.z - p.z, d = Math.hypot(dx, dz);
@@ -885,6 +1051,7 @@ function drawMini() {
   const zf = Math.max(8, Math.round(10 * f));
   for (const zn of ZONES) label(zn.name, X(zn.x), Z(zn.z) + (zn.key === 'plaza' ? 0 : -zn.r * k + 6 * f), zf, '#fde68a');
   for (const b of MINI_EXTRA) label(b.name, X(b.x), Z(b.z), zf, '#fde68a');
+  mini.fillStyle = '#fff'; mini.strokeStyle = '#111'; mini.lineWidth = 1; mini.beginPath(); mini.arc(X(ball.position.x), Z(ball.position.z), 2.5, 0, 7); mini.fill(); mini.stroke(); // 축구공
   for (const a of astronauts) { mini.fillStyle = 'rgba(226,232,240,.75)'; mini.fillRect(X(a.g.position.x) - 1.5, Z(a.g.position.z) - 1.5, 3, 3); } // 우주인
   // 사람 이름 (작은 지도에서는 점만)
   const people = [...mates, ...(teacher && teacher !== me ? [teacher] : [])];
@@ -974,6 +1141,10 @@ function tickKst() {
     const key = `${k.date} ${hm} ${a.id}`;
     if (a.on && a.time === hm && a.days.includes(k.day) && !fired.has(key)) { fired.add(key); fireAlarm(a.msg || '알람이에요!', a.gather, hm); }
   }
+  // 쉬는 시간(교시 사이 · 점심)이 시작되면 축구 초대
+  const brk = isBreakTime(k);
+  if (brk && !wasBreak && !soccer.on) soccerInvite();
+  wasBreak = brk;
   if (alarmState.autoBell && k.day >= 1 && k.day <= 5) {
     PERIODS.forEach((p, i) => {
       const key = `${k.date} ${hm} bell`;
@@ -1027,14 +1198,17 @@ function tick() {
     let f = 0, r = 0;
     if (!modalOpen) { if (keys.KeyW || keys.ArrowUp) f++; if (keys.KeyS || keys.ArrowDown) f--; if (keys.KeyA || keys.ArrowLeft) r--; if (keys.KeyD || keys.ArrowRight) r++; }
     const moving = f || r;
+    me.vx = me.vz = 0;
     if (moving) {
       if (sitting) { sitting = false; me.g.position.y = 0; markSeat(me, false); }
       const fx = -Math.sin(yaw), fz = -Math.cos(yaw), len = Math.hypot(f, r), sp = (keys.ShiftLeft ? 10 : 6) * dt / len;
       const dx = (fx * f - fz * r) * sp, dz = (fz * f + fx * r) * sp;
       me.g.position.x += dx; me.g.position.z += dz; collide(me.g.position); me.g.rotation.y = Math.atan2(dx, dz);
+      me.vx = dx / dt; me.vz = dz / dt;
     }
     animWalk(me, moving, dt);
     updateMates(dt);
+    updateSoccer(dt);
     // camera
     const tp = me.g.position;
     camera.position.set(tp.x + Math.sin(yaw) * Math.cos(pitch) * dist, tp.y + Math.sin(pitch) * dist + 1.5, tp.z + Math.cos(yaw) * Math.cos(pitch) * dist);
@@ -1052,7 +1226,7 @@ function tick() {
     eventT -= dt; if (eventT < 0) { eventT = rnd(20, 40); const m = pick(mates); const g = pick([10, 15, 20]); m.score += g; sys(pick([`${m.name}님이 수학 퀴즈 연속 정답! +${g}`, `${m.name}님이 🪐우주탐험가 배지를 향해 달리는 중! +${g}`, `${m.name}님이 역사 전시를 모두 관람했어요 +${g}`])); }
     rankT -= dt; if (rankT < 0) { rankT = 1; renderRank(); drawMini(); }
     // tags
-    autoGatherT -= dt; if (autoGatherT < 0) { autoGatherT = 180; gatherToLecture(); }
+    autoGatherT -= dt; if (autoGatherT < 0) { autoGatherT = 180; if (!soccer.on) gatherToLecture(); }
     for (const ent of new Set([me, teacher, ...mates])) {
       tmpV.copy(ent.g.position); tmpV.y += 2.7; tmpV.project(camera);
       const vis = tmpV.z < 1 && ent.g.position.distanceTo(camera.position) < 45;

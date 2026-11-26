@@ -5,45 +5,63 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EduVerse</title>
 <style>
-  :root{--bg:#0f172a;--panel:rgba(15,23,42,.82);--fg:#f1f5f9;--muted:#94a3b8;--accent:#38bdf8;--ok:#22c55e}
+  /* ===== 우주 테마 ===== */
+  :root{--bg:#05031a;--fg:#eef2ff;--muted:#a5b4fc;--accent:#67e8f9;--accent2:#c084fc;--gold:#fde68a;--ok:#4ade80;
+        --glass:linear-gradient(145deg,rgba(49,32,128,.55),rgba(10,7,38,.7));--line:rgba(165,180,252,.28);
+        --glow:0 0 0 1px rgba(103,232,249,.07) inset,0 10px 30px rgba(76,29,149,.38),0 0 22px rgba(103,232,249,.14)}
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--fg);font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif}
   #c{position:fixed;inset:0;display:block}
-  .panel{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;backdrop-filter:blur(6px)}
+  .panel{position:fixed;background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:10px 12px;backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);box-shadow:var(--glow)}
+  .panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(1px 1px at 12% 20%,#fff,transparent),radial-gradient(1px 1px at 78% 30%,#c7d2fe,transparent),radial-gradient(1.5px 1.5px at 40% 80%,#a5f3fc,transparent),radial-gradient(1px 1px at 90% 85%,#fff,transparent);opacity:.55;animation:twinkle 3.2s ease-in-out infinite alternate}
+  @keyframes twinkle{from{opacity:.15}to{opacity:.75}}
+  @keyframes shimmer{to{background-position:200% center}}
+  h3,h4,.ph h4{background:linear-gradient(90deg,#a5f3fc,#e9d5ff,#fde68a,#a5f3fc);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 6s linear infinite}
   #hud{top:12px;left:12px;font-size:14px;line-height:1.6}
-  #hud b{color:var(--accent)} .ver{font-size:11px;color:var(--muted);margin-left:6px;padding:1px 6px;border:1px solid var(--muted);border-radius:8px}
+  #hud b{color:var(--accent);text-shadow:0 0 8px rgba(103,232,249,.7)} .ver{font-size:11px;color:var(--gold);margin-left:6px;padding:1px 7px;border:1px solid rgba(253,230,138,.5);border-radius:10px;-webkit-text-fill-color:var(--gold);box-shadow:0 0 8px rgba(253,230,138,.35)}
+  #kst{font-variant-numeric:tabular-nums;color:var(--gold);text-shadow:0 0 8px rgba(253,230,138,.6)}
   #board{top:12px;right:244px;width:190px;font-size:13px}
   #board h4,#hud h4{margin:0 0 4px;font-size:13px}
-  #board ol{margin:0;padding-left:20px} #board li.me{color:var(--accent);font-weight:700}
+  #board ol{margin:0;padding-left:20px} #board li{padding:1px 0} #board li.me{color:var(--accent);font-weight:700;text-shadow:0 0 8px rgba(103,232,249,.7)}
+  #board li:nth-child(1)::marker{color:#fde68a} #board li:nth-child(2)::marker{color:#e5e7eb} #board li:nth-child(3)::marker{color:#fdba74}
   .ph{display:flex;gap:4px;align-items:center;margin-bottom:4px}
   .ph h4{flex:1;margin:0!important;font-size:13px}
   #miniWrap{top:12px;right:12px;padding:6px}
-  #mini{display:block}
+  #mini{display:block;border-radius:10px;box-shadow:0 0 14px rgba(192,132,252,.35) inset}
   #miniBar{display:flex;gap:4px;align-items:center;margin-bottom:4px;font-size:12px}
   #miniTitle{flex:1;color:var(--muted)}
-  .mb{background:#1e293b;color:var(--fg);border:1px solid #334155;border-radius:6px;padding:1px 7px;cursor:pointer;font-size:12px}
-  .mb:disabled{opacity:.35;cursor:default}
+  .mb{background:rgba(49,46,129,.55);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:1px 8px;cursor:pointer;font-size:12px;transition:.2s}
+  .mb:hover:not(:disabled){border-color:var(--accent);box-shadow:0 0 10px rgba(103,232,249,.5)}
+  .mb:disabled{opacity:.3;cursor:default}
   .tt{width:100%;border-collapse:collapse;font-size:13px;text-align:center}
-  .tt th,.tt td{border:1px solid #334155;padding:6px 4px}
-  .tt th{background:#1e293b} .tt td.sub{cursor:pointer} .tt td.sub:hover{background:#334155}
-  .tt .today{background:rgba(56,189,248,.15)} .tt td.now{background:#38bdf8;color:#0f172a;font-weight:700}
-  .tt .lunch td{color:#facc15;background:rgba(250,204,21,.08)}
+  .tt th,.tt td{border:1px solid var(--line);padding:6px 4px}
+  .tt th{background:rgba(49,46,129,.5)} .tt td.sub{cursor:pointer;transition:.15s} .tt td.sub:hover{background:rgba(103,232,249,.18);box-shadow:0 0 12px rgba(103,232,249,.35) inset}
+  .tt .today{background:rgba(103,232,249,.1)} .tt td.now{background:linear-gradient(135deg,#67e8f9,#c084fc);color:#0b0820;font-weight:700;box-shadow:0 0 14px rgba(103,232,249,.7)}
+  .tt .lunch td{color:var(--gold);background:rgba(253,230,138,.07)}
+  .arow{display:flex;gap:8px;align-items:center;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:rgba(49,46,129,.3)}
   #chat{left:12px;bottom:12px;width:340px;height:230px;display:flex;flex-direction:column;font-size:13px}
-  #log{flex:1;overflow-y:auto;margin-bottom:6px} #log div{margin:2px 0} #log .sys{color:#facc15} #log .me{color:var(--accent)}
-  #chat input{width:100%;padding:7px 9px;border-radius:8px;border:1px solid #334155;background:#0b1222;color:var(--fg)}
+  #log{flex:1;overflow-y:auto;margin-bottom:6px;scrollbar-width:thin;scrollbar-color:rgba(165,180,252,.4) transparent} #log div{margin:2px 0} #log b{color:#c7d2fe} #log .sys{color:var(--gold)} #log .me{color:var(--accent)}
+  #chat input,.inp{width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(5,3,26,.6);color:var(--fg);outline:none;transition:.2s}
+  #chat input:focus,.inp:focus{border-color:var(--accent);box-shadow:0 0 12px rgba(103,232,249,.45)}
   #emotes{bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
-  #emotes button,.btn{background:#1e293b;color:var(--fg);border:1px solid #334155;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:15px}
-  .btn.primary{background:var(--accent);color:#0f172a;font-weight:700;border:none}
-  #prompt{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#facc15;color:#111;padding:6px 12px;border-radius:8px;font-weight:700;display:none}
+  #emotes button,.btn{background:rgba(49,46,129,.55);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:6px 11px;cursor:pointer;font-size:15px;transition:.2s}
+  #emotes button:hover,.btn:hover{border-color:var(--accent);box-shadow:0 0 14px rgba(103,232,249,.45);transform:translateY(-1px)}
+  .btn.primary{background:linear-gradient(135deg,#67e8f9,#818cf8 55%,#c084fc);color:#0b0820;font-weight:700;border:none;box-shadow:0 0 16px rgba(129,140,248,.6)}
+  #prompt{position:fixed;bottom:74px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#fde68a,#f9a8d4);color:#1e1b4b;padding:7px 14px;border-radius:999px;font-weight:700;display:none;box-shadow:0 0 18px rgba(253,230,138,.7)}
+  #toast{position:fixed;top:14px;left:50%;transform:translate(-50%,-140%);z-index:20;padding:10px 20px;border-radius:999px;font-weight:700;color:#0b0820;background:linear-gradient(135deg,#67e8f9,#c084fc,#fde68a);box-shadow:0 0 24px rgba(192,132,252,.8);transition:transform .45s cubic-bezier(.2,1.4,.4,1);white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+  #toast.show{transform:translate(-50%,0)}
   #tags{position:fixed;inset:0;pointer-events:none}
   .tag{position:absolute;transform:translate(-50%,-100%);text-align:center;white-space:nowrap}
-  .tag .nm{font-size:12px;background:rgba(0,0,0,.55);padding:1px 6px;border-radius:6px}
-  .tag .bb{display:none;max-width:220px;white-space:normal;background:#fff;color:#111;font-size:12px;padding:5px 8px;border-radius:10px;margin-bottom:4px}
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:10}
-  .modal .box{background:#111827;border:1px solid #334155;border-radius:14px;padding:20px;width:min(460px,92vw)}
+  .tag .nm{font-size:12px;background:rgba(10,7,38,.7);border:1px solid rgba(165,180,252,.35);padding:1px 7px;border-radius:999px;box-shadow:0 0 8px rgba(129,140,248,.4)}
+  .tag .bb{display:none;max-width:220px;white-space:normal;background:linear-gradient(180deg,#fff,#eef2ff);color:#1e1b4b;font-size:12px;padding:5px 9px;border-radius:12px;margin-bottom:4px;box-shadow:0 0 12px rgba(192,132,252,.55)}
+  .modal{position:fixed;inset:0;background:radial-gradient(ellipse at center,rgba(30,16,80,.55),rgba(3,2,15,.8));display:none;align-items:center;justify-content:center;z-index:10}
+  .modal .box{position:relative;background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:22px;width:min(460px,92vw);max-height:92vh;overflow:auto;box-shadow:var(--glow),0 0 60px rgba(192,132,252,.25);backdrop-filter:blur(14px)}
   .modal h3{margin-top:0} .choices{display:grid;gap:8px;margin-top:10px}
-  #start{display:flex}
-  .inp{width:100%;padding:9px;border-radius:8px;border:1px solid #334155;background:#0b1222;color:#fff}
+  #start{display:flex;background:radial-gradient(ellipse at 50% 120%,rgba(192,132,252,.35),transparent 60%),radial-gradient(ellipse at 20% 0%,rgba(103,232,249,.25),transparent 50%),rgba(3,2,15,.35)}
+  #start::before,#start::after{content:"";position:absolute;inset:0;pointer-events:none;background-repeat:repeat;animation:twinkle 2.4s ease-in-out infinite alternate}
+  #start::before{background-image:radial-gradient(1.5px 1.5px at 20px 30px,#fff,transparent),radial-gradient(1px 1px at 120px 80px,#c7d2fe,transparent),radial-gradient(2px 2px at 200px 150px,#a5f3fc,transparent),radial-gradient(1px 1px at 60px 180px,#fff,transparent);background-size:240px 220px}
+  #start::after{background-image:radial-gradient(1px 1px at 50px 60px,#fde68a,transparent),radial-gradient(1.5px 1.5px at 170px 20px,#fff,transparent),radial-gradient(1px 1px at 100px 140px,#e9d5ff,transparent);background-size:200px 180px;animation-delay:1.2s}
+  #start .box{border-color:rgba(192,132,252,.45);box-shadow:var(--glow),0 0 80px rgba(129,140,248,.45)}
   .teacher-only{display:none!important} body.teacher .teacher-only{display:inline-block!important}
   #help{bottom:252px;left:12px;font-size:12px;color:var(--muted)}
   @media (max-width:760px){#board{display:none}#chat{width:calc(100vw - 24px);height:170px}#help{display:none}}
@@ -53,8 +71,8 @@
 <canvas id="c"></canvas>
 <div id="tags"></div>
 <div id="hud" class="panel"><h4>🏫 에듀버스 EduVerse <span class="ver" id="ver"></span></h4>
-  🟢 접속 중 <b id="online">10</b>명 · 📍 <span id="zone">광장</span><br>⭐ 점수 <b id="score">0</b> · 🏅 <span id="badges">-</span>
-  <div style="margin-top:6px;display:flex;gap:6px"><span id="role" style="font-size:12px;color:#94a3b8;align-self:center"></span><button class="btn" id="ttBtn" style="font-size:13px">🗓 시간표</button><button class="btn primary teacher-only" id="gather" style="font-size:13px">📢 강의실로 모이기</button><button class="btn teacher-only" id="attBtn" style="font-size:13px">📋 출석부</button></div></div>
+  🟢 접속 중 <b id="online">10</b>명 · 📍 <span id="zone">광장</span><br>🕘 <span id="kst" title="한국 표준시">--:--:--</span> <small style="color:#94a3b8">KST</small><br>⭐ 점수 <b id="score">0</b> · 🏅 <span id="badges">-</span>
+  <div style="margin-top:6px;display:flex;gap:6px"><span id="role" style="font-size:12px;color:#94a3b8;align-self:center"></span><button class="btn" id="ttBtn" style="font-size:13px">🗓 시간표</button><button class="btn primary teacher-only" id="gather" style="font-size:13px">📢 강의실로 모이기</button><button class="btn teacher-only" id="attBtn" style="font-size:13px">📋 출석부</button><button class="btn teacher-only" id="alarmBtn" style="font-size:13px">⏰ 알람</button></div></div>
 <div id="attend" class="panel" style="top:244px;right:12px;width:230px;font-size:13px;display:none">
   <h4 style="margin:0 0 6px;font-size:13px">📋 출석부 · <span id="attCount">0/10</span></h4>
   <table style="width:100%;border-collapse:collapse" id="attTable"></table>
@@ -68,9 +86,10 @@
 <div id="chat" class="panel"><div class="ph"><h4>💬 채팅 <span id="unread" style="color:#facc15"></span></h4><button class="mb" id="chMinus" title="채팅창 축소">－</button><button class="mb" id="chPlus" title="채팅창 확대">＋</button></div><div id="log"></div><input id="msg" placeholder="Enter로 채팅..." maxlength="80"></div>
 <div id="emotes" class="panel"><button data-e="👋">👋</button><button data-e="👏">👏</button><button data-e="❓">❓</button><button data-e="❤️">❤️</button></div>
 <div id="prompt"></div>
+<div id="toast"></div>
 <div id="modal" class="modal"><div class="box" id="mbox"></div></div>
 <div id="start" class="modal"><div class="box">
-  <h3>🏫 에듀버스에 오신 걸 환영해요</h3>
+  <h3 style="font-size:22px">🪐 에듀버스에 오신 걸 환영해요 ✨</h3>
   <p style="color:var(--muted);font-size:14px">친구 9명이 벌써 캠퍼스에 들어와 있어요. 같이 공부해요!</p>
   <div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn primary" id="roleS" style="flex:1">🎒 학생 입장</button><button class="btn" id="roleT" style="flex:1">👩‍🏫 선생님 로그인</button></div>
   <input id="nm" maxlength="8" placeholder="닉네임" class="inp">
@@ -86,7 +105,7 @@
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-const VERSION = '0.6.0-draft';
+const VERSION = '0.7.0-draft';
 // ===== 선생님 로그인 (데모용) =====
 // 주의: 브라우저 안에서만 확인하는 데모 로그인입니다. 실제 서비스에서는 서버 인증으로 바꿔야 해요.
 const TEACHER_PASSWORD = '1234';
@@ -104,13 +123,13 @@ const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x9fd3f7);
-scene.fog = new THREE.Fog(0x9fd3f7, 90, 230);
-const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 300);
+scene.background = new THREE.Color(0x0a0626);
+scene.fog = new THREE.Fog(0x1a1045, 110, 320);
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1200);
 function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
-scene.add(new THREE.HemisphereLight(0xffffff, 0x557744, 0.9));
-const sun = new THREE.DirectionalLight(0xffffff, 1.1);
+scene.add(new THREE.HemisphereLight(0xc7d2fe, 0x3b2a6e, 1.15));
+const sun = new THREE.DirectionalLight(0xe0e7ff, 1.15); // 은은한 달빛
 sun.position.set(30, 50, 20); sun.castShadow = true;
 Object.assign(sun.shadow.camera, { left: -100, right: 100, top: 100, bottom: -100, far: 200 }); sun.shadow.camera.updateProjectionMatrix();
 sun.shadow.mapSize.set(2048, 2048); scene.add(sun);
@@ -118,7 +137,112 @@ sun.shadow.mapSize.set(2048, 2048); scene.add(sun);
 const mat = c => new THREE.MeshStandardMaterial({ color: c, roughness: .8 });
 function box(w, h, d, c, x, y, z) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c)); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; scene.add(m); return m; }
 function cyl(rt, rb, h, c, x, y, z, seg = 24) { const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat(c)); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; scene.add(m); return m; }
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(220, 220), mat(0x7cc46a));
+// ---------- 우주 하늘: 반짝이는 별 · 성운 · 행성 · 별똥별 · 빛 입자 ----------
+const space = { stars: [], meteors: [], sparkles: null };
+function glowTex(inner, outer = 'rgba(0,0,0,0)') {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+  const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, inner); gr.addColorStop(.25, inner.replace(/[\d.]+\)$/, '0.55)')); gr.addColorStop(1, outer);
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const starTex = glowTex('rgba(255,255,255,1)');
+[[1800, 2.2, 0xffffff], [700, 3.4, 0xbae6fd], [300, 4.6, 0xfde68a], [200, 4, 0xe9d5ff]].forEach(([n, size, color], li) => {
+  const pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) { const u = Math.random(), v = Math.random() * .92 + .04, th = u * Math.PI * 2, ph = Math.acos(1 - v * 1.05), r = 600 + Math.random() * 150; pos[i * 3] = r * Math.sin(ph) * Math.cos(th); pos[i * 3 + 1] = r * Math.cos(ph) - 40; pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const m = new THREE.PointsMaterial({ size, map: starTex, color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: false, fog: false });
+  const p = new THREE.Points(geo, m); scene.add(p); space.stars.push({ m, base: .75, speed: .8 + li * .7, phase: li * 1.7 });
+});
+// 성운
+[[-300, 170, -420, 'rgba(192,132,252,.55)', 520], [340, 120, -300, 'rgba(103,232,249,.4)', 420], [80, 260, 380, 'rgba(244,114,182,.35)', 480], [-380, 90, 260, 'rgba(129,140,248,.45)', 440]].forEach(([x, y, z, c, s]) => {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); sp.position.set(x, y, z); sp.scale.set(s, s * .6, 1); scene.add(sp);
+});
+// 떠 있는 고리 행성과 달
+function planetTex(c1, c2, bands = 9) {
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; const g = cv.getContext('2d');
+  for (let i = 0; i < bands; i++) { g.fillStyle = i % 2 ? c1 : c2; g.fillRect(0, i * 128 / bands, 256, 128 / bands + 1); }
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const bigPlanet = new THREE.Group(); bigPlanet.position.set(-190, 150, -380); scene.add(bigPlanet);
+bigPlanet.add(new THREE.Mesh(new THREE.SphereGeometry(55, 48, 32), new THREE.MeshBasicMaterial({ map: planetTex('#a78bfa', '#f0abfc', 11), fog: false })));
+const ring = new THREE.Mesh(new THREE.RingGeometry(70, 100, 96), new THREE.MeshBasicMaterial({ color: 0xfde68a, transparent: true, opacity: .45, side: THREE.DoubleSide, fog: false })); ring.rotation.x = 1.25; ring.rotation.y = .3; bigPlanet.add(ring);
+const pglow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('rgba(216,180,254,.7)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); pglow.scale.set(240, 240, 1); bigPlanet.add(pglow);
+const moon = new THREE.Mesh(new THREE.SphereGeometry(18, 32, 20), new THREE.MeshBasicMaterial({ map: planetTex('#e0f2fe', '#bae6fd', 5), fog: false })); moon.position.set(260, 210, -200); scene.add(moon);
+const mglow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('rgba(186,230,253,.6)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); mglow.scale.set(110, 110, 1); mglow.position.copy(moon.position); scene.add(mglow);
+// 캠퍼스 위를 떠다니는 반짝이 입자
+{
+  const n = 260, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) { pos[i * 3] = rnd(-90, 90); pos[i * 3 + 1] = rnd(1.5, 22); pos[i * 3 + 2] = rnd(-90, 90); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  space.sparkles = new THREE.Points(geo, new THREE.PointsMaterial({ size: .6, map: starTex, color: 0xa5f3fc, transparent: true, opacity: .9, depthWrite: false, blending: THREE.AdditiveBlending }));
+  space.sparkleBase = pos.slice(); scene.add(space.sparkles);
+}
+function spawnMeteor() {
+  const len = rnd(40, 80), geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(len, 0, 0)]);
+  const colors = new Float32Array([1, 1, 1, .2, .3, .8]); geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const l = new THREE.Line(geo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1, fog: false, blending: THREE.AdditiveBlending }));
+  const a = rnd(0, Math.PI * 2); l.position.set(Math.cos(a) * 420, rnd(180, 320), Math.sin(a) * 420);
+  const dir = new THREE.Vector3(-Math.cos(a) + rnd(-.4, .4), -rnd(.25, .45), -Math.sin(a) + rnd(-.4, .4)).normalize();
+  l.quaternion.setFromUnitVectors(new THREE.Vector3(-1, 0, 0), dir); scene.add(l); space.meteors.push({ l, dir, life: 1.4 });
+}
+let meteorT = 2;
+function updateSpace(dt, T) {
+  for (const s of space.stars) s.m.opacity = s.base + Math.sin(T * s.speed + s.phase) * .25;
+  meteorT -= dt; if (meteorT < 0) { meteorT = rnd(1.5, 5); spawnMeteor(); }
+  for (let i = space.meteors.length - 1; i >= 0; i--) { const mt = space.meteors[i]; mt.l.position.addScaledVector(mt.dir, 320 * dt); mt.life -= dt; mt.l.material.opacity = Math.max(0, mt.life / 1.4); if (mt.life <= 0) { scene.remove(mt.l); mt.l.geometry.dispose(); mt.l.material.dispose(); space.meteors.splice(i, 1); } }
+  const p = space.sparkles.geometry.attributes.position, b = space.sparkleBase;
+  for (let i = 0; i < p.count; i++) { p.array[i * 3 + 1] = b[i * 3 + 1] + Math.sin(T * .8 + i) * .8; p.array[i * 3] = b[i * 3] + Math.cos(T * .5 + i * 1.3) * .6; }
+  p.needsUpdate = true; space.sparkles.material.opacity = .6 + Math.sin(T * 2) * .3;
+  bigPlanet.rotation.y += dt * .02; moon.rotation.y += dt * .05;
+}
+
+// ---------- 우주인 (말을 걸 수 없는 배경 캐릭터) ----------
+const astronauts = [];
+function makeAstronaut(floating) {
+  const g = new THREE.Group(), suit = mat(0xf8fafc), trim = mat(0x94a3b8);
+  const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  add(new THREE.CapsuleGeometry(.5, .9, 4, 12), suit, 0, 1.05, 0);
+  add(new THREE.BoxGeometry(.75, .85, .4), trim, 0, 1.15, -.45); // 생명유지 장치
+  add(new THREE.BoxGeometry(.32, .2, .05), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }), 0, 1.25, .5); // 가슴 패널
+  add(new THREE.SphereGeometry(.55, 24, 18), suit, 0, 2.1, 0); // 헬멧
+  const visor = add(new THREE.SphereGeometry(.42, 24, 16, -Math.PI / 2.2, Math.PI / 1.1, Math.PI / 3.2, Math.PI / 2.6), new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: .9, roughness: .15, emissive: 0x7c2d12, emissiveIntensity: .25 }), 0, 2.1, .18);
+  visor.scale.set(1, 1, 1.05);
+  [-1, 1].forEach(s => { add(new THREE.CapsuleGeometry(.16, .5, 4, 8), suit, s * .62, 1.15, 0).rotation.z = s * .25; add(new THREE.CapsuleGeometry(.18, .35, 4, 8), suit, s * .22, .3, 0); });
+  add(new THREE.CylinderGeometry(.025, .025, .5, 6), trim, .3, 2.75, -.1);
+  const beacon = add(new THREE.SphereGeometry(.08, 10, 8), new THREE.MeshBasicMaterial({ color: 0xf43f5e }), .3, 3.02, -.1);
+  if (floating) { // 제트팩 불꽃
+    [-.2, .2].forEach(x => { const f = add(new THREE.ConeGeometry(.12, .45, 10), new THREE.MeshBasicMaterial({ color: 0x67e8f9, transparent: true, opacity: .8 }), x, .55, -.5); f.rotation.x = Math.PI; f.userData.flame = true; });
+  }
+  scene.add(g);
+  const a = { g, beacon, floating, t: rnd(0, 10), target: null, wait: rnd(0, 4) };
+  if (floating) { a.cx = rnd(-60, 60); a.cz = rnd(-50, 60); a.r = rnd(10, 22); a.h = rnd(7, 14); a.sp = rnd(.12, .22) * (Math.random() < .5 ? -1 : 1); }
+  else g.position.set(rnd(-70, 70), 0, rnd(-50, 85));
+  astronauts.push(a);
+}
+for (let i = 0; i < 4; i++) makeAstronaut(false);
+for (let i = 0; i < 2; i++) makeAstronaut(true);
+function updateAstronauts(dt, T) {
+  for (const a of astronauts) {
+    a.t += dt; a.beacon.visible = Math.sin(a.t * 4) > 0;
+    if (a.floating) {
+      const ang = a.t * a.sp;
+      const nx = a.cx + Math.cos(ang) * a.r, nz = a.cz + Math.sin(ang) * a.r;
+      a.g.rotation.y = Math.atan2(nx - a.g.position.x, nz - a.g.position.z) || a.g.rotation.y;
+      a.g.position.set(nx, a.h + Math.sin(a.t * 1.3) * .8, nz); a.g.rotation.z = Math.sin(a.t * .9) * .15;
+      a.g.children.forEach(c => { if (c.userData.flame) c.scale.y = .7 + Math.random() * .6; });
+      continue;
+    }
+    const p = a.g.position;
+    if (a.wait > 0) { a.wait -= dt; p.y = Math.abs(Math.sin(a.t * 1.2)) * .05; continue; }
+    if (!a.target) a.target = { x: rnd(-80, 80), z: rnd(-55, 88) };
+    const dx = a.target.x - p.x, dz = a.target.z - p.z, d = Math.hypot(dx, dz);
+    if (d < .6) { a.target = null; a.wait = rnd(2, 7); continue; }
+    const s = Math.min(d, 1.6 * dt); p.x += dx / d * s; p.z += dz / d * s; collide(p);
+    a.g.rotation.y = Math.atan2(dx, dz);
+    p.y = Math.abs(Math.sin(a.t * 3)) * .35; // 저중력 껑충 걸음
+  }
+}
+
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(220, 220), mat(0x5fa86a));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
 const ZONES = [
@@ -336,6 +460,107 @@ const ZONE_LINES = {
   ground: ['축구할 사람~ ⚽', '운동장 진짜 넓다!', '달리기 시합하자 🏃', '철봉 매달리기 해볼까?'],
   history: ['세종대왕 최고 👑', '직지가 금속활자구나', '고조선이 제일 오래됐네', '석굴암 가보고 싶다'],
 };
+// ---------- 친구들의 성격과 말투 ----------
+// {me} = 내 이름, {f} = 다른 친구 이름
+const PERSONAS = {
+  민준: { // 활발한 운동파
+    idle: ['아 몸이 근질근질하다 ㅋㅋ', '오늘 점심 뭐 나오지?', '누가 나랑 달리기 할래?! 🏃', '쉬는 시간 언제야 ㅋㅋ'],
+    zone: { ground: ['슛~ 골인!! ⚽', '운동장 한 바퀴 돌고 올게 ㅋㅋ', '{f}! 패스 패스!'], math: ['수학은… 체력으로 푸는 거 아니지? ㅋㅋ'], lecture: ['졸리면 안 돼… 집중!! 💪'] },
+    greet: ['{me}! 왔구나 ㅋㅋ 같이 놀자!', '오 {me} 하이~ ✋', '{me} 축구 할 줄 알아?'],
+    reply: ['ㅋㅋㅋ 오케이!', '좋아좋아 가자!', '완전 인정 ㅋㅋ', '오 대박'],
+    ask: ['{f}, 이따 축구 할래?', '{f} 너 달리기 몇 초야?'], answer: ['콜! ⚽', '나보다 빠를걸? ㅋㅋ'],
+    gather: ['달려간다~ 🏃💨', '1등으로 도착!'], t: ['네 선생님!! 💪', '저요 저요!', '선생님 체육 언제 해요?'],
+  },
+  서연: { // 차분한 모범생
+    idle: ['오늘 배운 거 노트에 정리해야겠다 📚', '다음 시간 준비물 확인했어?', '복습은 그날 바로 하는 게 좋대', '조용히 공부하기 딱 좋다'],
+    zone: { lecture: ['광합성 필기 완료 ✍️', '선생님 말씀 중요한 부분이야, 별표!'], math: ['풀이 과정을 꼭 써봐', '검산까지 하면 완벽해 ✔️'], history: ['연도를 순서대로 외우면 쉬워'] },
+    greet: ['{me}, 안녕! 반가워 😊', '어서 와 {me}. 오늘 같이 공부하자', '{me} 왔구나~ 자리 맡아둘까?'],
+    reply: ['좋은 생각이야 😊', '맞아, 나도 그렇게 생각해', '음, 차근차근 해보자', '그렇구나, 알려줘서 고마워'],
+    ask: ['{f}, 오늘 숙제 다 했어?', '{f}, 이 부분 이해했어?'], answer: ['응, 같이 확인해보자', '내가 정리한 거 보여줄게 📒'],
+    gather: ['네, 지금 갈게요', '자리 정리하고 바로 갈게'], t: ['네, 선생님 😊', '질문 있습니다!', '오늘 수업 정리해 올게요'],
+  },
+  지호: { // 과학 덕후
+    idle: ['사실 바나나도 방사능이 조금 있대 🍌', '번개 온도가 태양 표면보다 뜨겁대!', '오늘 하늘 보니까 적운이네 ☁️', '실험하고 싶다 🔬'],
+    zone: { science: ['목성은 지구 1300개가 들어간대!!', '토성은 물에 뜰 만큼 가벼워 🪐', '화성의 하늘은 노을이 파란색이래'], lecture: ['엽록체에 엽록소가 있어서 초록색인 거야!'], ground: ['공이 포물선을 그리네… 물리다!'] },
+    greet: ['{me}! 재밌는 과학 사실 하나 알려줄까?', '오 {me} 안녕! 🔬', '{me} 과학관 가봤어? 강추!'],
+    reply: ['오 흥미롭다 🤔', '그거 과학적으로 설명할 수 있어!', '가설 세워볼까?', '데이터가 필요해 ㅋㅋ'],
+    ask: ['{f}, 블랙홀에 빠지면 어떻게 될까?', '{f}, 무지개는 왜 일곱 색일까?'], answer: ['스파게티처럼 늘어난대 😱', '빛의 굴절 때문이야!'],
+    gather: ['실험 결과 보러 가자!', '수업 = 지식 획득 ✨'], t: ['선생님, 그건 왜 그런 거예요?', '실험해 보고 싶어요!', '오 신기해요 🔬'],
+  },
+  하은: { // 감성 미술러
+    idle: ['오늘 하늘 색 너무 예쁘당 🎨', '분수대 그려보고 싶어 ✏️', '음악 들으면서 공부하면 좋당 🎧', '나뭇잎 그림자 예쁘다~'],
+    zone: { plaza: ['분수 물방울이 반짝반짝 ✨'], science: ['행성 색깔 조합 완전 예쁘당 🪐'], history: ['고려청자 색감 진짜 예쁘다 🏺'] },
+    greet: ['{me} 안녕~ 오늘 옷 색 예쁘당 💕', '{me}! 왔구나 헤헤', '안뇽 {me} 🌸'],
+    reply: ['헤헤 좋당 💕', '우왕 진짜?', '귀엽다 ㅎㅎ', '나도나도~'],
+    ask: ['{f}, 무슨 색 제일 좋아해?', '{f}, 이따 같이 그림 그릴래?'], answer: ['나는 하늘색! 💙', '좋아 좋아 🎨'],
+    gather: ['가는 중이양~', '헤헤 같이 가자'], t: ['네 선생님~ 💕', '선생님 그림으로 그려도 돼요?', '헤헤 재밌어요'],
+  },
+  도윤: { // 장난꾸러기
+    idle: ['나 사실 투명인간이야 😎 …안 보여?', '숙제를 강아지가 먹었어… 진짜로 🐶', '아재개그 하나: 세상에서 가장 가난한 왕은? 최저임금 ㅋㅋ', '심심하다~ 장난칠 사람 🙋'],
+    zone: { math: ['1+1은 창문! 🪟 ㅋㅋ', '정답… 찍었는데 맞았다 ㅋㅋㅋ'], lecture: ['선생님 몰래 하품 😪'], ground: ['나 공 차면 하늘까지 간다 ㅋㅋ'] },
+    greet: ['{me}!! 깜짝 놀랐지? 😜', '오 {me} 등장~ 빠밤!', '{me} 나랑 장난칠래? ㅋㅋ'],
+    reply: ['ㅋㅋㅋㅋ 웃기다', '에이~ 설마 ㅋㅋ', '오 그거 완전 내 스타일', '헐 대박 ㅋㅋ'],
+    ask: ['{f}, 내가 퀴즈 낼게! 바나나가 웃으면? ', '{f}, 너 방금 나 봤지? ㅋㅋ'], answer: ['바나나킥! ㅋㅋㅋ', '아니 안 봤는데? 😏'],
+    gather: ['간다 간다~ 슝 🚀', '꼴찌는 벌칙! ㅋㅋ'], t: ['넵 선생님! (진지)', '선생님 오늘 멋있어요 😎', 'ㅋㅋ 죄송해요 집중할게요'],
+  },
+  수아: { // 수줍은 친구
+    idle: ['저… 다들 뭐 해…?', '조용한 데가 좋아…', '(소곤소곤) 오늘 재밌다…', '나도 끼워줄래…?'],
+    zone: { lecture: ['저… 이거 시험에 나올까…?'], history: ['세종대왕님 대단하시다… 👑'], math: ['혹시… 이거 답 3 맞아…?'] },
+    greet: ['저… {me} 안녕…! 🙈', '{me}… 반가워…', '아 {me}다… 안녕…'],
+    reply: ['응… 좋아…!', '헉… 나도…', '고마워… 😊', '그렇구나…!'],
+    ask: ['저기… {f}, 나도 같이 가도 돼…?', '{f}… 이거 어떻게 해…?'], answer: ['당연하지! 같이 가자', '내가 알려줄게!'],
+    gather: ['아… 나도 갈게…!', '늦지 않게…!'], t: ['네… 선생님…', '저… 질문 있어요…', '잘 모르겠어요… 🙈'],
+  },
+  예준: { // 역사 덕후
+    idle: ['옛날 사람들은 뭐 하고 놀았을까?', '조선시대에도 시험이 있었어, 과거시험!', '오늘은 역사 속 오늘에 무슨 일이 있었을까 🤔', '이순신 장군 23전 23승이래!'],
+    zone: { history: ['고조선이 BC 2333년이야! 엄청 옛날이지', '직지는 구텐베르크보다 78년 빨라!', '훈민정음은 1443년에 만들어졌어'], plaza: ['이 분수대도 언젠가 문화재가 되려나'], science: ['옛날엔 천동설을 믿었대'] },
+    greet: ['{me}! 역사 이야기 들을래? 📜', '안녕 {me}, 오늘의 역사 퀴즈 갈까?', '{me} 반가워! 역사 전시관 가봤어?'],
+    reply: ['역사적으로도 그랬지!', '오 좋은데?', '그거 기록해둬야겠다 📜', '흥미롭군!'],
+    ask: ['{f}, 세종대왕이 만든 거 3개 말해봐!', '{f}, 고려 다음 나라는?'], answer: ['한글, 측우기, 해시계!', '조선이지! 🏯'],
+    gather: ['수업 시간 엄수! ⏰', '선비는 지각하지 않는다'], t: ['선생님, 역사 시간 언제예요?', '네! 알겠습니다 📜', '오 그 시대 이야기 더 해주세요'],
+  },
+  지우: { // 먹보
+    idle: ['배고파… 🍙', '오늘 급식 뭐야? 돈가스였으면 🍖', '간식 가져온 사람~?', '먹고 나면 공부 더 잘 돼 😋'],
+    zone: { plaza: ['급식실 냄새 여기까지 난다 😋'], ground: ['운동하니까 배고프다 🍙'], science: ['목성 줄무늬 보니까 롤케이크 생각나 🍰'] },
+    greet: ['{me}! 간식 있어? 😋', '안녕 {me}~ 점심 같이 먹자!', '{me} 왔다! 나 배고파 ㅎㅎ'],
+    reply: ['오 맛있겠다 😋', '좋아! 먹고 하자!', 'ㅎㅎ 배부르게 동의', '냠냠 인정'],
+    ask: ['{f}, 오늘 급식 메뉴 알아?', '{f}, 떡볶이 vs 피자?'], answer: ['카레래! 🍛', '둘 다! 😋'],
+    gather: ['수업 끝나면 점심이다! 🍱', '배고프지만 간다~'], t: ['네 선생님! (배꼽시계 꼬르륵)', '선생님 점심 언제예요? 😋', '알겠어요~'],
+  },
+  시우: { // 게임/컴퓨터
+    idle: ['이 메타버스 그래픽 괜찮네 🎮', '레벨업하려면 퀴즈 풀어야 함 ㄱㄱ', '버그 찾으면 제보한다 ㅋㅋ', '코딩 배우고 싶다 💻'],
+    zone: { math: ['수학 퀴즈 = 경험치 파밍 ㄱㄱ', '콤보 3연속 가즈아 🔥'], lecture: ['이번 스테이지는 광합성 ㅋㅋ'], ground: ['현실 운동장 = 오픈월드'] },
+    greet: ['{me} 접속 확인 ㅋㅋ 👾', '{me} 파티 초대 ㄱ?', 'ㅎㅇ {me}! 랭킹 몇 위임?'],
+    reply: ['ㄱㄱ', 'ㅇㅈ', 'GG 👍', '오 굿 ㅋㅋ'],
+    ask: ['{f}, 랭킹 몇 위야?', '{f}, 같이 퀴즈 파밍 ㄱ?'], answer: ['비밀 ㅋㅋ 곧 1위', 'ㄱㄱ!'],
+    gather: ['수업 퀘스트 수락 ✅', '이동 중… 로딩 99%'], t: ['넵 선생님 ✅', '선생님 코딩 수업도 해주세요!', '이해 완료 ✔️'],
+  },
+  은우: { // 질문왕 (선생님 모드)
+    idle: ['왜 하늘은 파랄까?', '궁금한 게 너무 많아!', '오늘은 질문 10개 해야지'],
+    zone: { lecture: ['선생님, 밤에도 광합성 해요?'] },
+    greet: ['{me}! 궁금한 거 있는데!', '안녕 {me}~'], reply: ['왜?', '진짜? 왜 그래?', '오 그렇구나!'],
+    ask: ['{f}, 왜 바다는 짤까?'], answer: ['소금이 녹아서래!'],
+    gather: ['가요 가요!'], t: ['선생님 왜 그래요?', '질문 있어요! ✋', '오 신기하다!'],
+  },
+};
+const fillT = (t, f) => t.replace(/\{me\}/g, me ? me.name : '친구').replace(/\{f\}/g, f || '얘들아');
+function personaLine(m, kind, f) {
+  const P = PERSONAS[m.name]; if (!P) return '';
+  const arr = (kind === 'zone' ? P.zone[f] : P[kind]) || P.idle;
+  return fillT(pick(arr), typeof f === 'string' && kind !== 'zone' ? f : undefined);
+}
+// 혼잣말 · 장소 이야기 · 친구끼리 대화를 섞어서
+function mateChatter() {
+  const m = pick(mates), P = PERSONAS[m.name], z = zoneOf(m.g.position.x, m.g.position.z), zk = z ? z.key : 'plaza', r = Math.random();
+  if (r < .3) {
+    const others = mates.filter(o => o !== m), f = others.sort((a, b) => a.g.position.distanceTo(m.g.position) - b.g.position.distanceTo(m.g.position))[0];
+    const i = Math.floor(Math.random() * P.ask.length);
+    mateSay(m, fillT(P.ask[i], f.name));
+    setTimeout(() => mateSay(f, Math.random() < .6 ? P.answer[i] || personaLine(f, 'reply') : personaLine(f, 'reply')), rnd(1500, 2800));
+  } else if (r < .6 && P.zone[zk]) mateSay(m, fillT(pick(P.zone[zk]), pick(mates.filter(o => o !== m)).name));
+  else if (r < .8) mateSay(m, pick(ZONE_LINES[zk] || ZONE_LINES.plaza));
+  else mateSay(m, personaLine(m, 'idle'));
+}
 const zoneOf = (x, z) => { for (const zn of ZONES) if (Math.hypot(x - zn.x, z - zn.z) < zn.r + 2) return zn; return null; };
 function randomTarget(m) {
   if (me && Math.random() < .12) return { x: me.g.position.x + rnd(-3, 3), z: me.g.position.z + rnd(-3, 3), greet: true };
@@ -365,13 +590,13 @@ function replyTo(text) {
   const n = text.match(/안녕|하이|hi|ㅎㅇ|반가/i) ? 3 : Math.random() < .5 ? 1 : 2;
   near.slice(0, n).forEach((m, i) => setTimeout(() => {
     let r;
-    if (isTeacher) r = /안녕|하이|hi|반가/i.test(text) ? pick(['안녕하세요 선생님! 🙇', '선생님 안녕하세요~', '좋은 아침이에요 선생님!']) : /\?/.test(text) ? pick(['음… 산소요!', '잘 모르겠어요 ㅠ', '저요 저요! ✋']) : pick(['네 선생님!', '알겠습니다~', '넵! 👍', '오 그렇구나']);
-    else if (/안녕|하이|hi|ㅎㅇ|반가/i.test(text)) r = pick([`안녕 ${me.name}! 👋`, `${me.name} 반가워!`, '하이하이~', '어서와!']);
+    if (isTeacher) r = /안녕|하이|hi|반가/i.test(text) ? pick(['안녕하세요 선생님! 🙇', '선생님 안녕하세요~', '좋은 아침이에요 선생님!']) : /\?/.test(text) ? pick(['음… 산소요!', '잘 모르겠어요 ㅠ', '저요 저요! ✋', ...PERSONAS[m.name].t]) : personaLine(m, 't');
+    else if (/안녕|하이|hi|ㅎㅇ|반가/i.test(text)) r = personaLine(m, 'greet');
     else if (/퀴즈|수학|문제/.test(text)) r = pick(['수학 퀴즈존은 서쪽이야!', '나 방금 3문제 맞혔어 ㅎㅎ', '같이 풀자!']);
     else if (/어디|뭐 ?해|뭐하/.test(text)) r = pick(['나 강의실 갈 거야', '과학관 구경 중!', '역사 전시관 가볼래?']);
     else if (/\?|모르|어떻게/.test(text)) r = pick(['음… 강의실에서 선생님이 설명해주셔!', '나도 궁금했어', 'E 키 누르면 볼 수 있어!']);
     else if (/ㅋㅋ|ㅎㅎ|재밌/.test(text)) r = pick(['ㅋㅋㅋㅋ', 'ㅎㅎ 인정', '완전 재밌어']);
-    else r = pick(['오 좋다!', '맞아맞아', '나도 그렇게 생각해', '굿굿 👍', '오~ 그렇구나']);
+    else r = personaLine(m, 'reply');
     mateSay(m, r);
   }, 900 + i * 1100 + rnd(0, 800)));
 }
@@ -492,7 +717,7 @@ function renderAttend() {
 }
 function showAttend(on) { $('attend').style.display = on ? 'block' : 'none'; renderAttend(); }
 $('attBtn').onclick = () => { showAttend($('attend').style.display === 'none'); $('attBtn').blur(); };
-function gatherToLecture() {
+function gatherToLecture(auto = false) {
   if (!me) return;
   $('gather').blur();
   say(teacher, '여러분~ 수업 시작해요! 강의실로 모여주세요 📢', 6);
@@ -506,9 +731,10 @@ function gatherToLecture() {
   mates.forEach((m, i) => setTimeout(() => {
     m.g.position.y = 0; m.wait = 0; m.speed = 8; markSeat(m, false);
     m.target = { x: free[i].x, z: free[i].z - 1.2, sit: true, cls: true };
-    if (i < 4) mateSay(m, pick(['네~ 가요!', '수업이다!', '달려가는 중 🏃', '기다려주세요 선생님!']));
+    if (i < 4) mateSay(m, personaLine(m, 'gather'));
   }, rnd(300, 2500)));
   if (isTeacher) {
+    if (auto) return; // 알람으로 모을 때는 창 없이
     openModal(`<h3>📢 학생들을 강의실로 불렀어요</h3><p>학생 ${mates.length}명이 자리로 이동 중이에요. 출석부에서 착석 현황을 확인하세요.</p><div class="choices"><button class="btn primary" id="tp">✨ 교탁으로 이동</button><button class="btn" data-close>닫기</button></div>`);
     $('tp').onclick = () => { me.g.position.set(0, 0, -46); me.g.rotation.y = 0; yaw = 0; closeModal(); };
     return;
@@ -516,12 +742,13 @@ function gatherToLecture() {
   openModal(`<h3>📢 선생님이 강의실로 불렀어요</h3><p>친구들이 강의실로 이동하고 있어요. 어떻게 갈까요?</p><div class="choices"><button class="btn primary" id="tp">✨ 바로 자리로 이동</button><button class="btn" data-close>🚶 직접 걸어갈게요</button></div>`);
   $('tp').onclick = () => { sitAt(SEATS[MY_SEAT]); closeModal(); sys('자리에 앉았어요. (이동하면 일어나요)'); };
 }
-$('gather').onclick = gatherToLecture;
+$('gather').onclick = () => gatherToLecture();
 
 // ---------- Input ----------
 const keys = {};
 addEventListener('keydown', e => {
   if (!started) return;
+  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return; // 입력칸에 타이핑 중이면 게임 조작 무시
   if (e.key === 'Enter') { $('msg').focus(); e.preventDefault(); return; }
   if (e.key === 'Escape') closeModal();
   keys[e.code] = true;
@@ -605,8 +832,8 @@ function updateMates(dt) {
     if (d < .4) {
       m.wait = t.cls ? 75 : t.sit ? rnd(15, 35) : rnd(3, 9);
       if (t.sit) { p.y = .5; m.g.rotation.y = Math.PI; m.speed = m.baseSpeed; markSeat(m, true); }
-      if (t.greet && me && isTeacher) mateSay(m, pick(['선생님 안녕하세요!', '선생님 질문 있어요 ✋', '오늘 수업 재밌었어요!']));
-      else if (t.greet && me) mateSay(m, pick([`${me.name} 뭐 해?`, `${me.name}! 같이 다니자`, '안녕 ㅎㅎ', `${me.name} 퀴즈 몇 점이야?`]));
+      if (t.greet && me && isTeacher) mateSay(m, personaLine(m, 't'));
+      else if (t.greet && me) mateSay(m, personaLine(m, 'greet'));
       if (t.quiz && Math.random() < .6) setTimeout(() => { const g = pick([10, 20, 30]); m.score += g; say(m, `정답! +${g} ✨`, 3); }, 2000);
       animWalk(m, false, dt); continue;
     }
@@ -656,6 +883,7 @@ function drawMini() {
   const zf = Math.max(8, Math.round(10 * f));
   for (const zn of ZONES) label(zn.name, X(zn.x), Z(zn.z) + (zn.key === 'plaza' ? 0 : -zn.r * k + 6 * f), zf, '#fde68a');
   for (const b of MINI_EXTRA) label(b.name, X(b.x), Z(b.z), zf, '#fde68a');
+  for (const a of astronauts) { mini.fillStyle = 'rgba(226,232,240,.75)'; mini.fillRect(X(a.g.position.x) - 1.5, Z(a.g.position.z) - 1.5, 3, 3); } // 우주인
   // 사람 이름 (작은 지도에서는 점만)
   const people = [...mates, ...(teacher && teacher !== me ? [teacher] : [])];
   for (const m of people) { const px = X(m.g.position.x), pz = Z(m.g.position.z); mini.fillStyle = hex(m.color); mini.beginPath(); mini.arc(px, pz, 3 * Math.max(.7, f), 0, 7); mini.fill(); if (S >= 160) label(m.name, px, pz - 7, 8); }
@@ -679,7 +907,7 @@ const SUBJECT_ZONE = { 과학: 'science', 수학: 'math', 역사: 'history', 사
 const SUBJECT_EMOJI = { 국어: '📖', 수학: '➗', 과학: '🔭', 사회: '🌏', 역사: '🏛', 영어: '🔤', 체육: '⚽', 음악: '🎵', 미술: '🎨', 창체: '🌱', 동아리: '🎲' };
 const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
 function showTimetable() {
-  const now = new Date(), day = now.getDay() - 1, mins = now.getHours() * 60 + now.getMinutes();
+  const k = kstNow(), day = k.day - 1, mins = k.h * 60 + k.m; // 한국시간 기준
   const curP = PERIODS.findIndex(p => mins >= toMin(p[1]) && mins < toMin(p[2]));
   let rows = '', si = 0;
   PERIODS.forEach((p, pi) => {
@@ -690,7 +918,7 @@ function showTimetable() {
     }).join('') + '</tr>'; si++;
   });
   const curText = day >= 0 && day < 5 && curP >= 0 ? (PERIODS[curP][0] === '점심' ? '지금은 점심시간이에요 🍚' : `지금은 ${DAYS[day]}요일 ${PERIODS[curP][0]} · ${TIMETABLE[day][PERIODS.slice(0, curP).filter(p => p[0] !== '점심').length]} 시간이에요`) : day < 0 || day > 4 ? '오늘은 주말이에요 🎉' : '지금은 수업 시간이 아니에요';
-  openModal(`<h3>🗓 주간 시간표 (월~금)</h3><p style="margin:0 0 10px;color:#94a3b8;font-size:13px">${curText} · 과목을 누르면 해당 장소로 이동해요</p>
+  openModal(`<h3>🗓 주간 시간표 (월~금) <small style="color:#94a3b8;font-weight:400">한국시간 ${pad2(k.h)}:${pad2(k.m)}</small></h3><p style="margin:0 0 10px;color:#94a3b8;font-size:13px">${curText} · 과목을 누르면 해당 장소로 이동해요</p>
     <table class="tt"><tr><th></th>${DAYS.map((d, i) => `<th class="${i === day ? 'today' : ''}">${d}${i === day ? ' (오늘)' : ''}</th>`).join('')}</tr>${rows}</table>
     <div style="text-align:right;margin-top:12px"><button class="btn" data-close>닫기</button></div>`);
   mbox.style.width = 'min(640px,96vw)';
@@ -702,9 +930,90 @@ function showTimetable() {
   });
 }
 $('ttBtn').onclick = () => { $('ttBtn').blur(); showTimetable(); };
+
+// ---------- 한국시간(KST) 시계 & 선생님 알람 ----------
+const KST_FMT = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+function kstNow() {
+  const p = Object.fromEntries(KST_FMT.formatToParts(new Date()).map(x => [x.type, x.value]));
+  return { day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday), h: +p.hour % 24, m: +p.minute, s: +p.second, date: `${p.year}-${p.month}-${p.day}` };
+}
+function pad2(n) { return String(n).padStart(2, '0'); }
+const DAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
+let alarmT = 0;
+const alarmState = { autoBell: true, list: [] }; // list: {id, time:'HH:MM', days:[0..6], msg, gather, on}
+try { Object.assign(alarmState, JSON.parse(localStorage.getItem('eduverse-alarms') || '{}')); } catch (e) { }
+const fired = new Set();
+function saveAlarms() { try { localStorage.setItem('eduverse-alarms', JSON.stringify(alarmState)); } catch (e) { } }
+let audioCtx = null;
+function chime() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    [[784, 0], [659, .45], [784, .9], [988, 1.35]].forEach(([f, t]) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, audioCtx.currentTime + t); g.gain.exponentialRampToValueAtTime(.25, audioCtx.currentTime + t + .03); g.gain.exponentialRampToValueAtTime(.0001, audioCtx.currentTime + t + .42);
+      o.connect(g).connect(audioCtx.destination); o.start(audioCtx.currentTime + t); o.stop(audioCtx.currentTime + t + .45);
+    });
+  } catch (e) { }
+}
+let toastTimer = 0;
+function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 6000); }
+function fireAlarm(msg, gather, hm) {
+  chime(); toast(`⏰ ${hm} · ${msg}`);
+  if (teacher) say(teacher, `⏰ ${msg}`, 6);
+  sys(`⏰ [한국시간 ${hm}] ${teacher ? teacher.name : '선생님'}: ${msg}`);
+  setTimeout(() => { const m = pick(mates); if (m) mateSay(m, personaLine(m, gather ? 'gather' : 'reply')); }, 1800);
+  if (gather) setTimeout(() => gatherToLecture(true), 1200);
+}
+function tickKst() {
+  const k = kstNow(), hm = `${pad2(k.h)}:${pad2(k.m)}`;
+  $('kst').textContent = `${DAY_KO[k.day]} ${hm}:${pad2(k.s)}`;
+  if (!me) return;
+  for (const a of alarmState.list) {
+    const key = `${k.date} ${hm} ${a.id}`;
+    if (a.on && a.time === hm && a.days.includes(k.day) && !fired.has(key)) { fired.add(key); fireAlarm(a.msg || '알람이에요!', a.gather, hm); }
+  }
+  if (alarmState.autoBell && k.day >= 1 && k.day <= 5) {
+    PERIODS.forEach((p, i) => {
+      const key = `${k.date} ${hm} bell`;
+      if (p[1] !== hm || fired.has(key)) return; fired.add(key);
+      if (p[0] === '점심') return fireAlarm('점심시간이에요! 급식실로 가요 🍚', false, hm);
+      const subj = TIMETABLE[k.day - 1][PERIODS.slice(0, i).filter(x => x[0] !== '점심').length];
+      fireAlarm(`${p[0]} ${SUBJECT_EMOJI[subj] || ''} ${subj} 수업 시작!`, SUBJECT_ZONE[subj] === 'lecture', hm);
+    });
+  }
+}
+function showAlarms() {
+  const k = kstNow();
+  const rows = alarmState.list.map(a => `<div class="arow"><label><input type="checkbox" data-on="${a.id}" ${a.on ? 'checked' : ''}> <b>${a.time}</b></label><span>${a.days.length === 7 ? '매일' : a.days.map(d => DAY_KO[d]).join('·')}</span><span style="flex:1">${a.msg || '알람'}${a.gather ? ' · 📢모으기' : ''}</span><button class="mb" data-del="${a.id}">삭제</button></div>`).join('') || '<p style="color:#94a3b8;font-size:13px">아직 알람이 없어요.</p>';
+  openModal(`<h3>⏰ 선생님 알람 <small style="color:#94a3b8;font-weight:400">한국시간(KST) 기준</small></h3>
+    <p style="margin:0 0 8px;font-size:13px">지금 한국시간: <b>${DAY_KO[k.day]}요일 ${pad2(k.h)}:${pad2(k.m)}</b></p>
+    <label style="font-size:13px"><input type="checkbox" id="autoBell" ${alarmState.autoBell ? 'checked' : ''}> 🔔 시간표에 맞춰 교시마다 수업 종 자동 알림 (월~금)</label>
+    <h4 style="margin:14px 0 6px">내 알람</h4><div id="alist">${rows}</div>
+    <h4 style="margin:14px 0 6px">새 알람 추가</h4>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <input type="time" id="aTime" class="inp" style="width:120px" value="${pad2(k.h)}:${pad2((k.m + 1) % 60)}">
+      <input id="aMsg" class="inp" style="flex:1;min-width:160px" maxlength="40" placeholder="알림 내용 (예: 쉬는 시간 끝!)">
+    </div>
+    <div id="aDays" style="display:flex;gap:4px;margin:8px 0;font-size:13px">${[1, 2, 3, 4, 5, 6, 0].map(d => `<label><input type="checkbox" value="${d}" ${d >= 1 && d <= 5 ? 'checked' : ''}>${DAY_KO[d]}</label>`).join(' ')}</div>
+    <label style="font-size:13px"><input type="checkbox" id="aGather"> 📢 알람이 울리면 학생들을 강의실로 모으기</label>
+    <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:12px"><button class="btn" id="aTest">🔔 지금 울려보기</button><button class="btn primary" id="aAdd">추가</button><button class="btn" data-close>닫기</button></div>`);
+  $('autoBell').onchange = e => { alarmState.autoBell = e.target.checked; saveAlarms(); };
+  mbox.querySelectorAll('[data-on]').forEach(c => c.onchange = () => { const a = alarmState.list.find(x => x.id === c.dataset.on); a.on = c.checked; saveAlarms(); });
+  mbox.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { alarmState.list = alarmState.list.filter(x => x.id !== b.dataset.del); saveAlarms(); showAlarms(); });
+  $('aAdd').onclick = () => {
+    const time = $('aTime').value, days = [...$('aDays').querySelectorAll('input:checked')].map(i => +i.value);
+    if (!time || !days.length) { toast('시각과 요일을 골라 주세요'); return; }
+    alarmState.list.push({ id: String(Date.now()), time, days, msg: $('aMsg').value.trim(), gather: $('aGather').checked, on: true });
+    alarmState.list.sort((a, b) => a.time.localeCompare(b.time)); saveAlarms(); showAlarms();
+  };
+  $('aTest').onclick = () => { const k2 = kstNow(); closeModal(); fireAlarm($('aMsg') && $('aMsg').value.trim() || '테스트 알람이에요!', false, `${pad2(k2.h)}:${pad2(k2.m)}`); };
+}
+$('alarmBtn').onclick = () => { $('alarmBtn').blur(); showAlarms(); };
+tickKst();
 function tick() {
   requestAnimationFrame(tick);
   const dt = Math.min(clock.getDelta(), .05), T = clock.elapsedTime;
+  updateSpace(dt, T); updateAstronauts(dt, T);
   pl.forEach(p => { p.a += p.sp * dt; p.m.position.set(Math.cos(p.a) * p.d, 0, Math.sin(p.a) * p.d); });
   scene.traverse(o => { if (o.userData.spin) o.rotation.y += dt; });
   pdisk.material.opacity = .5 + Math.sin(T * 4) * .5;
@@ -736,7 +1045,8 @@ function tick() {
     for (const it of INTERACTS) { const d = Math.hypot(it.x - tp.x, it.z - tp.z); if (d < best) { best = d; nearI = it; } }
     $('prompt').style.display = nearI && !modalOpen && !sitting ? 'block' : 'none'; if (nearI) $('prompt').textContent = nearI.label;
     // ambient chat
-    chatT -= dt; if (chatT < 0) { chatT = rnd(5, 11); const m = pick(mates); const z = zoneOf(m.g.position.x, m.g.position.z); mateSay(m, pick(ZONE_LINES[z ? z.key : 'plaza'])); }
+    chatT -= dt; if (chatT < 0) { chatT = rnd(6, 12); mateChatter(); }
+    alarmT -= dt; if (alarmT < 0) { alarmT = 1; tickKst(); }
     eventT -= dt; if (eventT < 0) { eventT = rnd(20, 40); const m = pick(mates); const g = pick([10, 15, 20]); m.score += g; sys(pick([`${m.name}님이 수학 퀴즈 연속 정답! +${g}`, `${m.name}님이 🪐우주탐험가 배지를 향해 달리는 중! +${g}`, `${m.name}님이 역사 전시를 모두 관람했어요 +${g}`])); }
     rankT -= dt; if (rankT < 0) { rankT = 1; renderRank(); drawMini(); }
     // tags

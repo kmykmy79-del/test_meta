@@ -72,6 +72,8 @@
   #prompt{position:fixed;bottom:74px;left:50%;transform:translateX(-50%);cursor:pointer;z-index:5;background:linear-gradient(135deg,#fde68a,#f9a8d4);color:#1e1b4b;padding:7px 14px;border-radius:999px;font-weight:700;display:none;box-shadow:0 0 18px rgba(253,230,138,.7)}
   #toast{position:fixed;top:14px;left:50%;transform:translate(-50%,-140%);z-index:20;padding:10px 20px;border-radius:999px;font-weight:700;color:#0b0820;background:linear-gradient(135deg,#67e8f9,#c084fc,#fde68a);box-shadow:0 0 24px rgba(192,132,252,.8);transition:transform .45s cubic-bezier(.2,1.4,.4,1);white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
   #toast.show{transform:translate(-50%,0)}
+  #tagBoard{top:64px;left:50%;transform:translateX(-50%);display:none;text-align:center;font-size:15px;font-weight:700;padding:8px 16px;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+  #tagBoard b{color:#fb7185;text-shadow:0 0 10px #f43f5e}
   #soccerBoard{top:64px;left:50%;transform:translateX(-50%);display:none;text-align:center;font-size:18px;font-weight:700;padding:8px 18px;white-space:nowrap}
   #soccerBoard .tb b{color:#60a5fa;text-shadow:0 0 10px #3b82f6} #soccerBoard .tr b{color:#f87171;text-shadow:0 0 10px #ef4444}
   #sbTime{margin-left:10px;font-size:14px;color:var(--gold)} #sbHint{font-size:11px;font-weight:400;color:var(--muted);margin-top:2px}
@@ -125,6 +127,7 @@
 </div>
 <div id="emoPop" class="panel"><button data-e="👋">👋</button><button data-e="👏">👏</button><button data-e="❓">❓</button><button data-e="❤️">❤️</button></div>
 <div id="toast"></div>
+<div id="tagBoard" class="panel"></div>
 <div id="soccerBoard" class="panel"><span class="tb">🔵 파랑 <b id="sbB">0</b></span> : <span class="tr"><b id="sbR">0</b> 빨강 🔴</span> <span id="sbTime">3:00</span><div id="sbHint">공에 닿으면 드리블 · <b>Space</b> 슛 · 파랑팀은 오른쪽 골대로!</div></div>
 <div id="modal" class="modal"><div class="box" id="mbox"></div></div>
 <div id="start" class="modal"><div class="box">
@@ -156,7 +159,7 @@
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-const VERSION = '1.3.1-draft';
+const VERSION = '1.4.0-draft';
 // ===== 선생님 로그인 (데모용) =====
 // 주의: 브라우저 안에서만 확인하는 데모 로그인입니다. 실제 서비스에서는 서버 인증으로 바꿔야 해요.
 const TEACHER_PASSWORD = '1234';
@@ -914,6 +917,7 @@ function teacherGather(auto = false) {
 function gatherToLecture(auto = false, seatMap = null) {
   if (!me) return;
   if (soccer.on) endSoccer('수업 시간이 되어 경기를 마쳤어요');
+  if (TAG.on) endTag('수업 시간이 되어 술래잡기를 마쳤어요');
   $('gather').blur();
   say(teacher, '여러분~ 수업 시작해요! 강의실로 모여주세요 📢', 6);
   sys(`👩‍🏫 ${teacher.name}: 수업 시작합니다! 모두 강의실로 모여주세요`);
@@ -1100,6 +1104,7 @@ function soccerInvite() {
 function setTeamGlow(ent, team) { const nm = ent.tag.querySelector('.nm'); nm.style.boxShadow = team == null ? '' : `0 0 10px ${team === 0 ? '#3b82f6' : '#ef4444'}`; nm.style.borderColor = team == null ? '' : (team === 0 ? '#60a5fa' : '#f87171'); }
 function startSoccer() {
   if (soccer.on || !me) return;
+  if (TAG.on) { toast('🏃 술래잡기 중에는 축구를 시작할 수 없어요'); return; }
   Object.assign(soccer, { on: true, score: [0, 0], time: 180, pause: 3, chaseT: 0, lastTouch: null, myGoals: 0 });
   sitting = false; markSeat(me, false);
   const pool = [...mates].sort(() => Math.random() - .5);
@@ -1219,6 +1224,113 @@ function updateSoccer(dt) {
   }
   updateBoard();
   if (soccer.time <= 0) endSoccer('경기 종료 휘슬! 📣');
+}
+
+// ---------- 🏃 술래잡기 ----------
+// 광장 주변(반지름 30) 안에서 2분 동안. 술래에게 닿으면 술래가 바뀌고, 새 술래는 1.5초 멈췄다 출발해요.
+const TAG = { on: false, time: 120, it: null, freeze: 0, players: [], itTime: new Map(), chatT: 0, arena: { x: 0, z: 0, r: 30 } };
+const tagRing = new THREE.Mesh(new THREE.RingGeometry(TAG.arena.r - .4, TAG.arena.r, 96), new THREE.MeshBasicMaterial({ color: 0xf43f5e, transparent: true, opacity: .6, side: THREE.DoubleSide }));
+tagRing.rotation.x = -Math.PI / 2; tagRing.position.set(TAG.arena.x, .35, TAG.arena.z); tagRing.visible = false; scene.add(tagRing);
+const TAG_SPOT = { x: 9, z: 9 };
+cyl(.15, .15, 3, 0xf43f5e, TAG_SPOT.x + 1.2, 1.5, TAG_SPOT.z + 1.2, 8); plate('🏃 술래잡기 (E)', TAG_SPOT.x + 1.2, 3.4, TAG_SPOT.z + 1.25, 5, '#be123c');
+INTERACTS.push({ x: TAG_SPOT.x, z: TAG_SPOT.z, get label() { return TAG.on ? 'E: 🏃 술래잡기 그만하기' : 'E: 🏃 술래잡기 시작 (2분)'; }, act: () => TAG.on ? endTag('술래잡기를 멈췄어요') : startTag() });
+const nameOf = e => e === me ? me.name : e.name;
+function itMark(ent, on) {
+  if (!ent.itMesh) {
+    const m = new THREE.Mesh(new THREE.ConeGeometry(.35, .6, 12), new THREE.MeshBasicMaterial({ color: 0xf43f5e }));
+    m.rotation.x = Math.PI; m.position.y = 3.35; ent.g.add(m); ent.itMesh = m;
+  }
+  ent.itMesh.visible = on;
+  const nm = ent.tag.querySelector('.nm'); nm.dataset.base = nm.dataset.base || nm.textContent;
+  nm.textContent = on ? '👹 술래 · ' + nm.dataset.base : nm.dataset.base;
+  nm.style.boxShadow = on ? '0 0 12px #f43f5e' : ''; nm.style.borderColor = on ? '#fb7185' : '';
+}
+function setIt(ent, by) {
+  if (TAG.it) itMark(TAG.it, false);
+  TAG.it = ent; TAG.freeze = 1.5; itMark(ent, true);
+  if (by) {
+    sys(`🏃 ${nameOf(by)}이(가) ${nameOf(ent)}을(를) 잡았어요! 이제 ${nameOf(ent)}이(가) 술래 👹`);
+    if (ent === me) { toast('👹 잡혔어요! 이제 내가 술래예요 — 친구에게 닿으면 넘길 수 있어요'); say(me, '앗 잡혔다! 😱', 2.5); }
+    else say(ent, pick(['앗 잡혔다!', '으악 ㅠㅠ', '이번엔 내가 잡는다! 😤', '헉 빠르다!']), 2.5);
+    if (by !== me) say(by, pick(['잡았다! 😆', '터치~!', '이제 너가 술래야!']), 2.5);
+    else toast('✋ 잡았다! 이제 도망가요!');
+  }
+}
+function startTag() {
+  if (TAG.on || !me) return;
+  if (soccer.on) { toast('⚽ 축구 경기 중에는 술래잡기를 할 수 없어요'); return; }
+  const players = [me, ...mates.filter(m => m.team == null)];
+  Object.assign(TAG, { on: true, time: 120, players, it: null, chatT: 3 }); TAG.itTime = new Map(players.map(p => [p, 0]));
+  sitting = false; markSeat(me, false);
+  players.forEach((p, i) => { // 광장에 둥글게 모여서 시작
+    const a = i / players.length * Math.PI * 2; p.g.position.set(Math.cos(a) * 9, 0, Math.sin(a) * 9);
+    if (p !== me) { markSeat(p, false); p.inTag = true; p.wait = 0; p.wander = null; p.speed = p.baseSpeed; }
+  });
+  tagRing.visible = true; $('tagBoard').style.display = 'block';
+  const first = pick(players.filter(p => p !== me)); setIt(first);
+  chime(); toast(`🏃 술래잡기 시작! 첫 술래는 ${first.name} 👹 — 도망가요!`);
+  sys(`🏃 술래잡기 시작! (2분 · 빨간 원 안에서) 첫 술래: ${first.name}. 술래에게 닿으면 술래가 바뀌어요`);
+  setTimeout(() => say(first, '10초 세고 간다~ 아니 바로 간다! 😈', 3), 400);
+}
+function endTag(reason) {
+  if (!TAG.on) return;
+  TAG.on = false; tagRing.visible = false; $('tagBoard').style.display = 'none';
+  if (TAG.it) itMark(TAG.it, false);
+  const rank = [...TAG.itTime.entries()].sort((a, b) => a[1] - b[1]);
+  const myRank = rank.findIndex(([p]) => p === me) + 1, myIt = Math.round(TAG.itTime.get(me) || 0);
+  sys(`🏃 ${reason} · 술래였던 시간이 짧은 순서: ${rank.slice(0, 3).map(([p, t], i) => `${i + 1}위 ${nameOf(p)}(${Math.round(t)}초)`).join(', ')}`);
+  const lastIt = TAG.it;
+  openModal(`<h3>🏃 술래잡기 끝!</h3><p>${reason}</p><p>나는 <b>${myRank}위</b> · 술래였던 시간 <b>${myIt}초</b>${lastIt ? `<br>마지막 술래: ${nameOf(lastIt)} 👹` : ''}</p>
+    <ol style="max-height:180px;overflow:auto;font-size:13px">${rank.map(([p, t]) => `<li${p === me ? ' style="color:var(--accent);font-weight:700"' : ''}>${nameOf(p)} · ${Math.round(t)}초</li>`).join('')}</ol>
+    <button class="btn primary" data-close>확인</button>`);
+  addScore(myRank <= 3 ? 20 : 10, myRank <= 3 ? `술래잡기 ${myRank}위 🏅` : '술래잡기 참여');
+  if (myRank === 1) badge('🏃술래잡기왕');
+  for (const p of TAG.players) if (p !== me) { p.inTag = false; p.target = randomTarget(p); p.wait = rnd(1, 3); p.speed = p.baseSpeed; }
+  TAG.it = null;
+}
+function tagAI(m, dt) {
+  const p = m.g.position, A = TAG.arena; let tx, tz, sp;
+  if (TAG.it === m) {
+    if (TAG.freeze > 0) { animWalk(m, false, dt); return; }
+    // 가장 가까운 사람 쫓기 (가끔은 나를 노려요)
+    const others = TAG.players.filter(o => o !== m);
+    let target = others.reduce((a, b) => a.g.position.distanceTo(p) < b.g.position.distanceTo(p) ? a : b);
+    if (me.g.position.distanceTo(p) < 16 && Math.random() < .02) target = me;
+    m.chase = m.chase && m.chaseT > 0 ? m.chase : target; m.chaseT = (m.chaseT || 2) - dt; if (m.chaseT <= 0) { m.chase = target; m.chaseT = 2; }
+    tx = m.chase.g.position.x; tz = m.chase.g.position.z; sp = 6.6;
+  } else {
+    const it = TAG.it, ip = it ? it.g.position : null, d = ip ? ip.distanceTo(p) : 99;
+    if (d < 11) { // 술래 반대쪽으로 도망 (살짝 비스듬히)
+      const ax = p.x - ip.x, az = p.z - ip.z, l = Math.hypot(ax, az) || 1, side = (m.side = m.side || (Math.random() < .5 ? -1 : 1));
+      tx = p.x + (ax / l + side * az / l * .5) * 6; tz = p.z + (az / l - side * ax / l * .5) * 6; sp = 5.6;
+    } else {
+      if (!m.wander || Math.hypot(m.wander.x - p.x, m.wander.z - p.z) < 1) { const a = rnd(0, Math.PI * 2), r = rnd(5, A.r - 4); m.wander = { x: A.x + Math.cos(a) * r, z: A.z + Math.sin(a) * r }; }
+      tx = m.wander.x; tz = m.wander.z; sp = 3.2;
+    }
+  }
+  // 구역 안으로
+  const cx = tx - A.x, cz = tz - A.z, cl = Math.hypot(cx, cz); if (cl > A.r - 2) { tx = A.x + cx / cl * (A.r - 2); tz = A.z + cz / cl * (A.r - 2); }
+  const dx = tx - p.x, dz = tz - p.z, d = Math.hypot(dx, dz);
+  if (d > .2) { const s = Math.min(d, sp * dt); p.x += dx / d * s; p.z += dz / d * s; collide(p); m.g.rotation.y = Math.atan2(dx, dz); }
+  p.y = 0; animWalk(m, d > .2, dt);
+}
+function updateTag(dt) {
+  if (!TAG.on) return;
+  TAG.time -= dt; if (TAG.freeze > 0) TAG.freeze -= dt;
+  if (TAG.it) TAG.itTime.set(TAG.it, (TAG.itTime.get(TAG.it) || 0) + dt);
+  // 내 위치는 구역 안으로
+  const A = TAG.arena, mp = me.g.position, mx = mp.x - A.x, mz = mp.z - A.z, ml = Math.hypot(mx, mz);
+  if (ml > A.r - .8) { mp.x = A.x + mx / ml * (A.r - .8); mp.z = A.z + mz / ml * (A.r - .8); if ((TAG.warnT = (TAG.warnT || 0) - dt) < 0) { TAG.warnT = 3; toast('🏃 술래잡기는 빨간 원 안에서만 해요!'); } }
+  // 잡기
+  if (TAG.it && TAG.freeze <= 0) {
+    const ip = TAG.it.g.position;
+    for (const o of TAG.players) if (o !== TAG.it && o.g.position.distanceTo(ip) < 1.25) { setIt(o, TAG.it); break; }
+  }
+  tagRing.material.opacity = .45 + Math.sin(clock.elapsedTime * 4) * .2;
+  const t = Math.max(0, Math.ceil(TAG.time));
+  $('tagBoard').innerHTML = `🏃 술래잡기 · 👹 술래: <b>${TAG.it ? nameOf(TAG.it) : '-'}</b>${TAG.it === me ? ' (나!)' : ''} <span style="color:var(--gold);margin-left:8px">⏱ ${Math.floor(t / 60)}:${pad2(t % 60)}</span><div style="font-size:11px;font-weight:400;color:var(--muted)">${TAG.it === me ? '친구에게 닿으면 술래를 넘길 수 있어요!' : '술래에게 잡히지 않게 도망가요! (🏃 달리기 사용)'}${TAG.freeze > 0 ? ' · 새 술래 출발 준비…' : ''}</div>`;
+  TAG.chatT -= dt; if (TAG.chatT < 0) { TAG.chatT = rnd(3, 6); const m = pick(TAG.players.filter(x => x !== me)); if (m) say(m, m === TAG.it ? pick(['거기 서!! 😈', '잡으러 간다~', '도망쳐도 소용없어!']) : pick(['나 잡아봐라~ 😜', '술래 온다!!', '도망가!!', '여기여기~']), 2.5); }
+  if (TAG.time <= 0) endTag('시간 종료! ⏰');
 }
 
 // ---------- Input ----------
@@ -1607,6 +1719,7 @@ function animWalk(ent, moving, dt) {
 function updateMates(dt) {
   for (const m of mates) {
     if (soccer.on && m.team != null) { soccerAI(m, dt); continue; }
+    if (TAG.on && m.inTag) { tagAI(m, dt); continue; }
     const p = m.g.position, t = m.target;
     if (m.wait > 0) { m.wait -= dt; animWalk(m, false, dt); if (m.wait <= 0) { m.target = randomTarget(m); p.y = 0; markSeat(m, false); } continue; }
     const dx = t.x - p.x, dz = t.z - p.z, d = Math.hypot(dx, dz);
@@ -1843,7 +1956,7 @@ function tick() {
     if (moving) { const p = me.g.position, edge = WORLD - 2.3; if (Math.abs(p.x) >= edge || Math.abs(p.z) >= edge) fenceWarn(); }
     if (!modalOpen) fenceT -= dt;
     updateMates(dt);
-    updateSoccer(dt);
+    updateSoccer(dt); updateTag(dt);
     updateNet(dt);
     // camera
     const tp = me.g.position;

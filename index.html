@@ -12,7 +12,7 @@
   .panel{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;backdrop-filter:blur(6px)}
   #hud{top:12px;left:12px;font-size:14px;line-height:1.6}
   #hud b{color:var(--accent)} .ver{font-size:11px;color:var(--muted);margin-left:6px;padding:1px 6px;border:1px solid var(--muted);border-radius:8px}
-  #board{top:12px;right:184px;width:190px;font-size:13px}
+  #board{top:12px;right:244px;width:190px;font-size:13px}
   #board h4,#hud h4{margin:0 0 4px;font-size:13px}
   #board ol{margin:0;padding-left:20px} #board li.me{color:var(--accent);font-weight:700}
   #mini{top:12px;right:12px;padding:6px}
@@ -43,12 +43,12 @@
 <div id="hud" class="panel"><h4>🏫 에듀버스 EduVerse <span class="ver" id="ver"></span></h4>
   🟢 접속 중 <b id="online">10</b>명 · 📍 <span id="zone">광장</span><br>⭐ 점수 <b id="score">0</b> · 🏅 <span id="badges">-</span>
   <div style="margin-top:6px;display:flex;gap:6px"><span id="role" style="font-size:12px;color:#94a3b8;align-self:center"></span><button class="btn primary teacher-only" id="gather" style="font-size:13px">📢 강의실로 모이기</button><button class="btn teacher-only" id="attBtn" style="font-size:13px">📋 출석부</button></div></div>
-<div id="attend" class="panel" style="top:184px;right:12px;width:230px;font-size:13px;display:none">
+<div id="attend" class="panel" style="top:244px;right:12px;width:230px;font-size:13px;display:none">
   <h4 style="margin:0 0 6px;font-size:13px">📋 출석부 · <span id="attCount">0/10</span></h4>
   <table style="width:100%;border-collapse:collapse" id="attTable"></table>
 </div>
 <div id="board" class="panel"><h4>🏆 오늘의 랭킹</h4><ol id="rank"></ol></div>
-<canvas id="mini" class="panel" width="160" height="160"></canvas>
+<canvas id="mini" class="panel" width="220" height="220"></canvas>
 <div id="help" class="panel">WASD 이동 · 드래그 시점 · 휠 줌 · E 상호작용 · Enter 채팅</div>
 <div id="chat" class="panel"><div id="log"></div><input id="msg" placeholder="Enter로 채팅..." maxlength="80"></div>
 <div id="emotes" class="panel"><button data-e="👋">👋</button><button data-e="👏">👏</button><button data-e="❓">❓</button><button data-e="❤️">❤️</button></div>
@@ -71,7 +71,7 @@
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-const VERSION = '0.4.1-draft';
+const VERSION = '0.5.0-draft';
 // ===== 선생님 로그인 (데모용) =====
 // 주의: 브라우저 안에서만 확인하는 데모 로그인입니다. 실제 서비스에서는 서버 인증으로 바꿔야 해요.
 const TEACHER_PASSWORD = '1234';
@@ -90,20 +90,20 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9fd3f7);
-scene.fog = new THREE.Fog(0x9fd3f7, 60, 140);
+scene.fog = new THREE.Fog(0x9fd3f7, 90, 230);
 const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 300);
 function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 scene.add(new THREE.HemisphereLight(0xffffff, 0x557744, 0.9));
 const sun = new THREE.DirectionalLight(0xffffff, 1.1);
 sun.position.set(30, 50, 20); sun.castShadow = true;
-Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70 });
+Object.assign(sun.shadow.camera, { left: -100, right: 100, top: 100, bottom: -100, far: 200 }); sun.shadow.camera.updateProjectionMatrix();
 sun.shadow.mapSize.set(2048, 2048); scene.add(sun);
 
 const mat = c => new THREE.MeshStandardMaterial({ color: c, roughness: .8 });
 function box(w, h, d, c, x, y, z) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c)); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; scene.add(m); return m; }
 function cyl(rt, rb, h, c, x, y, z, seg = 24) { const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat(c)); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; scene.add(m); return m; }
-const ground = new THREE.Mesh(new THREE.CircleGeometry(80, 64), mat(0x7cc46a));
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(220, 220), mat(0x7cc46a));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
 const ZONES = [
@@ -112,8 +112,10 @@ const ZONES = [
   { key: 'science', name: '과학관', x: 40, z: 0, r: 15, color: 0x1e1b4b },
   { key: 'math', name: '수학 퀴즈존', x: -40, z: 0, r: 15, color: 0xfde68a },
   { key: 'history', name: '역사 전시관', x: 0, z: 40, r: 15, color: 0xd6b48a },
+  { key: 'ground', name: '운동장', x: 0, z: 76, r: 16, color: 0xc8a26b, noPlat: true },
 ];
 for (const zn of ZONES) {
+  if (zn.noPlat) continue;
   const p = new THREE.Mesh(new THREE.CylinderGeometry(zn.r, zn.r, .3, 48), mat(zn.color));
   p.position.set(zn.x, .15, zn.z); p.receiveShadow = true; scene.add(p);
   if (zn.key !== 'plaza') { const path = box(4, .2, 25, 0xe7d8b5, zn.x / 2, .1, zn.z / 2); if (zn.x) path.rotation.y = Math.PI / 2; }
@@ -122,12 +124,68 @@ const colliders = []; // {x,z,r}
 // fountain
 cyl(4, 4.5, 1, 0x94a3b8, 0, .5, 0); cyl(3.5, 3.5, .2, 0x38bdf8, 0, 1, 0); cyl(.5, .7, 3, 0x94a3b8, 0, 1.5, 0);
 colliders.push({ x: 0, z: 0, r: 4.8 });
-// trees
-for (let i = 0; i < 40; i++) {
-  const a = rnd(0, Math.PI * 2), d = rnd(58, 76), x = Math.cos(a) * d, z = Math.sin(a) * d;
-  cyl(.4, .5, 3, 0x8b5a2b, x, 1.5, z, 8);
-  const top = new THREE.Mesh(new THREE.ConeGeometry(2.2, 5, 10), mat(0x2f7d32)); top.position.set(x, 5, z); top.castShadow = true; scene.add(top);
+// ---------- School campus ----------
+const RECTS = []; // 건물 충돌 박스 {x0,x1,z0,z1}
+const WORLD = 92;
+function wallTex(cols, rows, wall = '#f3e6c9', win = '#7dd3fc') {
+  const cv = document.createElement('canvas'); cv.width = cols * 64; cv.height = rows * 64; const g = cv.getContext('2d');
+  g.fillStyle = wall; g.fillRect(0, 0, cv.width, cv.height);
+  for (let y = 0; y < rows; y++) { g.fillStyle = '#d9c8a5'; g.fillRect(0, y * 64 + 58, cv.width, 6); for (let x = 0; x < cols; x++) { g.fillStyle = '#e5e7eb'; g.fillRect(x * 64 + 9, y * 64 + 11, 46, 40); g.fillStyle = win; g.fillRect(x * 64 + 12, y * 64 + 14, 40, 34); g.fillStyle = '#e5e7eb'; g.fillRect(x * 64 + 31, y * 64 + 14, 2, 34); } }
+  const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; return tx;
 }
+function building(w, h, d, x, z, cols, rows, roof = 0x9a3412, wall = '#f3e6c9') {
+  const front = new THREE.MeshStandardMaterial({ map: wallTex(cols, rows, wall), roughness: .9 });
+  const side = new THREE.MeshStandardMaterial({ map: wallTex(Math.max(2, Math.round(cols * d / w)), rows, wall), roughness: .9 });
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [side, side, mat(0xd9c8a5), mat(0xd9c8a5), front, front]);
+  m.position.set(x, h / 2, z); m.castShadow = m.receiveShadow = true; scene.add(m);
+  box(w + 1.2, .7, d + 1.2, roof, x, h + .35, z);
+  RECTS.push({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2 });
+  return m;
+}
+function plate(text, x, y, z, w = 10, bg = '#1e3a8a', rotY = 0) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w / 5), new THREE.MeshBasicMaterial({ map: textTexture([text], 1024, 205, bg, '#fff', 120) }));
+  m.position.set(x, y, z); m.rotation.y = rotY; scene.add(m);
+}
+// 본관 (강의실 뒤)
+building(84, 13, 9, 0, -66, 14, 4);
+box(12, 6, 9.4, 0xf3e6c9, 0, 16, -66); box(12.8, .7, 10, 0x9a3412, 0, 19.35, -66);
+const clockFace = new THREE.Mesh(new THREE.CircleGeometry(2.2, 32), new THREE.MeshBasicMaterial({ map: textTexture(['🕘'], 256, 256, '#ffffff', '#111', 200) }));
+clockFace.position.set(0, 16, -61.25); scene.add(clockFace);
+plate('에듀버스 학교', 0, 11.6, -61.45, 16);
+box(8, 4, 1.2, 0x64748b, 0, 2, -61.2); // 현관
+// 체육관 / 급식실
+building(30, 10, 20, 70, -35, 6, 3, 0x1d4ed8, '#e2e8f0'); plate('🏀 체육관', 70, 8, -24.95, 10, '#1d4ed8');
+building(26, 7, 16, -70, -35, 5, 2, 0x15803d); plate('🍚 급식실', -70, 5.6, -26.95, 9, '#15803d');
+// 운동장
+const field = new THREE.Mesh(new THREE.PlaneGeometry(76, 34), mat(0xc8a26b)); field.rotation.x = -Math.PI / 2; field.position.set(0, .04, 76); field.receiveShadow = true; scene.add(field);
+const lineM = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const line = (w, d, x, z) => { const l = new THREE.Mesh(new THREE.PlaneGeometry(w, d), lineM); l.rotation.x = -Math.PI / 2; l.position.set(x, .06, z); scene.add(l); };
+line(68, .25, 0, 61); line(68, .25, 0, 91); line(.25, 30, -34, 76); line(.25, 30, 34, 76); line(.25, 30, 0, 76);
+const circ = new THREE.Mesh(new THREE.RingGeometry(4.8, 5.1, 40), lineM); circ.rotation.x = -Math.PI / 2; circ.position.set(0, .06, 76); scene.add(circ);
+[-1, 1].forEach(s => { // 축구 골대
+  const gx = s * 34;
+  [-3, 3].forEach(dz => { cyl(.12, .12, 2.4, 0xffffff, gx, 1.2, 76 + dz, 8); colliders.push({ x: gx, z: 76 + dz, r: .3 }); });
+  const bar = cyl(.12, .12, 6, 0xffffff, gx, 2.4, 76, 8); bar.rotation.x = Math.PI / 2;
+  const net = new THREE.Mesh(new THREE.PlaneGeometry(6, 2.4), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .35, side: THREE.DoubleSide })); net.position.set(gx + s * 1.2, 1.2, 76); net.rotation.y = Math.PI / 2; scene.add(net);
+});
+const ball = new THREE.Mesh(new THREE.SphereGeometry(.35, 16, 12), mat(0xffffff)); ball.position.set(3, .35, 74); ball.castShadow = true; scene.add(ball);
+// 철봉 & 벤치
+[-1, 0, 1].forEach(i => { const x = 46 + i * 2.2; cyl(.08, .08, 2.2, 0x94a3b8, x - 1, 1.1, 66, 6); cyl(.08, .08, 2.2, 0x94a3b8, x + 1, 1.1, 66, 6); const b = cyl(.05, .05, 2, 0xcbd5e1, x, 2.1, 66, 6); b.rotation.z = Math.PI / 2; });
+[-20, -10, 10, 20].forEach(x => { box(4, .3, 1, 0x92400e, x, .6, 57.5); box(.3, .6, .8, 0x57534e, x - 1.6, .3, 57.5); box(.3, .6, .8, 0x57534e, x + 1.6, .3, 57.5); });
+// 국기 게양대
+cyl(.12, .15, 12, 0xe5e7eb, -30, 6, 56, 8); colliders.push({ x: -30, z: 56, r: .4 });
+const flag = new THREE.Mesh(new THREE.PlaneGeometry(3, 2), new THREE.MeshBasicMaterial({ map: textTexture(['☯'], 300, 200, '#ffffff', '#1d4ed8', 150), side: THREE.DoubleSide })); flag.position.set(-28.4, 10.8, 56); scene.add(flag);
+// 담장
+[[0, -WORLD - 1, 2 * WORLD + 4, .5], [0, WORLD + 1, 2 * WORLD + 4, .5], [-WORLD - 1, 0, .5, 2 * WORLD + 4], [WORLD + 1, 0, .5, 2 * WORLD + 4]].forEach(([x, z, w, d]) => box(w, 2, d, 0x166534, x, 1, z));
+// 나무 (담장 안쪽 둘레, 건물/운동장 피해서)
+function tree(x, z) { cyl(.4, .5, 3, 0x8b5a2b, x, 1.5, z, 8); const top = new THREE.Mesh(new THREE.ConeGeometry(2.2, 5, 10), mat(0x2f7d32)); top.position.set(x, 5, z); top.castShadow = true; scene.add(top); colliders.push({ x, z, r: .6 }); }
+for (let t = -84; t <= 84; t += 12) for (const [x, z] of [[t, -86], [t, 86], [-86, t], [86, t]]) {
+  if (RECTS.some(r => x > r.x0 - 3 && x < r.x1 + 3 && z > r.z0 - 3 && z < r.z1 + 3)) continue;
+  if (Math.abs(x) < 42 && z > 56) continue; // 운동장
+  tree(x, z);
+}
+// 화단
+[[-14, -57], [14, -57], [-14, 18], [14, 18]].forEach(([x, z]) => { box(6, .5, 2, 0x78350f, x, .25, z); for (let i = 0; i < 5; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(.3, 8, 6), mat(pick([0xf472b6, 0xfacc15, 0xf87171, 0xa78bfa]))); f.position.set(x - 2 + i, .75, z); scene.add(f); } });
 
 // signs
 function textTexture(lines, w = 1024, h = 512, bg = '#0f172a', fg = '#fff', size = 56) {
@@ -260,6 +318,7 @@ const ZONE_LINES = {
   lecture: ['오 광합성 재밌다', '엽록체… 메모해둬야지 ✍️', '선생님 설명 쉽다!', '산소가 나오는구나'],
   science: ['목성 진짜 크다!!', '토성 고리 멋있어', '지구는 세 번째 행성!', '화성 가보고 싶다 🚀'],
   math: ['방정식 하나 풀었다!', '이거 너무 어려운데ㅠ', '분수 문제 나왔어', '연속 정답 가즈아'],
+  ground: ['축구할 사람~ ⚽', '운동장 진짜 넓다!', '달리기 시합하자 🏃', '철봉 매달리기 해볼까?'],
   history: ['세종대왕 최고 👑', '직지가 금속활자구나', '고조선이 제일 오래됐네', '석굴암 가보고 싶다'],
 };
 const zoneOf = (x, z) => { for (const zn of ZONES) if (Math.hypot(x - zn.x, z - zn.z) < zn.r + 2) return zn; return null; };
@@ -479,7 +538,14 @@ let nearI = null, chatT = 6, eventT = 15, lastZone = '';
 const tmpV = new THREE.Vector3();
 function collide(p) {
   for (const c of colliders) { const dx = p.x - c.x, dz = p.z - c.z, d = Math.hypot(dx, dz), r = c.r + .5; if (d < r && d > 0) { p.x = c.x + dx / d * r; p.z = c.z + dz / d * r; } }
-  const d = Math.hypot(p.x, p.z); if (d > 70) { p.x *= 70 / d; p.z *= 70 / d; }
+  for (const r of RECTS) {
+    const x0 = r.x0 - .5, x1 = r.x1 + .5, z0 = r.z0 - .5, z1 = r.z1 + .5;
+    if (p.x > x0 && p.x < x1 && p.z > z0 && p.z < z1) {
+      const dl = p.x - x0, dr = x1 - p.x, dt = p.z - z0, db = z1 - p.z, m = Math.min(dl, dr, dt, db);
+      if (m === dl) p.x = x0; else if (m === dr) p.x = x1; else if (m === dt) p.z = z0; else p.z = z1;
+    }
+  }
+  p.x = Math.max(-WORLD + 2, Math.min(WORLD - 2, p.x)); p.z = Math.max(-WORLD + 2, Math.min(WORLD - 2, p.z));
 }
 function animWalk(ent, moving, dt) {
   if (moving) { ent.walkT += dt * 10; ent.body.position.y = 1 + Math.abs(Math.sin(ent.walkT)) * .12; ent.g.rotation.z = Math.sin(ent.walkT) * .05; }
@@ -504,12 +570,26 @@ function updateMates(dt) {
 }
 const clock = new THREE.Clock();
 const mini = $('mini').getContext('2d');
+const MINI_EXTRA = [ // 지도에 표시할 건물 이름
+  { name: '본관', x: 0, z: -66 }, { name: '체육관', x: 70, z: -35 }, { name: '급식실', x: -70, z: -35 },
+];
 function drawMini() {
-  const S = 160, k = S / 150; mini.clearRect(0, 0, S, S);
-  mini.fillStyle = '#14532d'; mini.beginPath(); mini.arc(S / 2, S / 2, 70 * k, 0, 7); mini.fill();
-  for (const zn of ZONES) { mini.fillStyle = '#' + zn.color.toString(16).padStart(6, '0'); mini.beginPath(); mini.arc(S / 2 + zn.x * k, S / 2 + zn.z * k, zn.r * k, 0, 7); mini.fill(); }
-  for (const m of mates) { mini.fillStyle = '#' + m.color.toString(16).padStart(6, '0'); mini.beginPath(); mini.arc(S / 2 + m.g.position.x * k, S / 2 + m.g.position.z * k, 2.5, 0, 7); mini.fill(); }
-  if (me) { mini.fillStyle = '#fff'; mini.beginPath(); mini.arc(S / 2 + me.g.position.x * k, S / 2 + me.g.position.z * k, 4, 0, 7); mini.fill(); }
+  const S = 220, k = S / (2 * WORLD + 6), X = x => S / 2 + x * k, Z = z => S / 2 + z * k;
+  const hex = c => '#' + c.toString(16).padStart(6, '0');
+  mini.clearRect(0, 0, S, S);
+  mini.fillStyle = '#3f7d3a'; mini.fillRect(X(-WORLD), Z(-WORLD), 2 * WORLD * k, 2 * WORLD * k);
+  mini.fillStyle = '#c8a26b'; mini.fillRect(X(-38), Z(59), 76 * k, 34 * k); // 운동장
+  for (const r of RECTS) { mini.fillStyle = '#e7dcc2'; mini.fillRect(X(r.x0), Z(r.z0), (r.x1 - r.x0) * k, (r.z1 - r.z0) * k); }
+  for (const zn of ZONES) { if (zn.noPlat) continue; mini.fillStyle = hex(zn.color); mini.globalAlpha = .85; mini.beginPath(); mini.arc(X(zn.x), Z(zn.z), zn.r * k, 0, 7); mini.fill(); mini.globalAlpha = 1; }
+  mini.textAlign = 'center'; mini.textBaseline = 'middle';
+  const label = (t, x, y, size, color = '#fff') => { mini.font = `bold ${size}px Malgun Gothic, sans-serif`; mini.lineWidth = 3; mini.strokeStyle = 'rgba(0,0,0,.75)'; mini.strokeText(t, x, y); mini.fillStyle = color; mini.fillText(t, x, y); };
+  // 장소 이름
+  for (const zn of ZONES) label(zn.name, X(zn.x), Z(zn.z) + (zn.key === 'plaza' ? 0 : -zn.r * k + 6), 10, '#fde68a');
+  for (const b of MINI_EXTRA) label(b.name, X(b.x), Z(b.z), 10, '#fde68a');
+  // 사람 이름
+  const people = [...mates, ...(teacher && teacher !== me ? [teacher] : [])];
+  for (const m of people) { const px = X(m.g.position.x), pz = Z(m.g.position.z); mini.fillStyle = hex(m.color); mini.beginPath(); mini.arc(px, pz, 3, 0, 7); mini.fill(); label(m.name, px, pz - 7, 8); }
+  if (me) { const px = X(me.g.position.x), pz = Z(me.g.position.z); mini.fillStyle = '#fff'; mini.strokeStyle = '#38bdf8'; mini.lineWidth = 2; mini.beginPath(); mini.arc(px, pz, 4.5, 0, 7); mini.fill(); mini.stroke(); label('나', px, pz - 9, 10, '#38bdf8'); }
 }
 let rankT = 0;
 function tick() {

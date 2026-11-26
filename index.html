@@ -77,8 +77,8 @@
   🟢 접속 중 <b id="online">10</b>명 · 📍 <span id="zone">광장</span><br>🕘 <span id="kst" title="한국 표준시">--:--:--</span> <small style="color:#94a3b8">KST</small><br><span id="roomInfo" style="display:none"></span>⭐ 점수 <b id="score">0</b> · 🏅 <span id="badges">-</span>
   <div style="margin-top:6px;display:flex;gap:6px"><span id="role" style="font-size:12px;color:#94a3b8;align-self:center"></span><button class="btn" id="ttBtn" style="font-size:13px">🗓 시간표</button><button class="btn primary teacher-only" id="gather" style="font-size:13px">📢 강의실로 모이기</button><button class="btn teacher-only" id="attBtn" style="font-size:13px">📋 출석부</button><button class="btn teacher-only" id="alarmBtn" style="font-size:13px">⏰ 알람</button></div></div>
 <div id="attend" class="panel" style="top:244px;right:12px;width:230px;font-size:13px;display:none">
-  <h4 style="margin:0 0 6px;font-size:13px">📋 출석부 · <span id="attCount">0/10</span></h4>
-  <table style="width:100%;border-collapse:collapse" id="attTable"></table>
+  <div class="ph"><h4>📋 출석부 · <span id="attCount" style="color:var(--gold)">0/10</span></h4><button class="mb" id="attMinus" title="출석부 접기">－</button><button class="mb" id="attPlus" title="출석부 펼치기">＋</button><button class="mb" id="attClose" title="출석부 닫기">✕</button></div>
+  <div id="attBody" style="max-height:calc(100vh - 320px);overflow-y:auto;scrollbar-width:thin"><table style="width:100%;border-collapse:collapse" id="attTable"></table></div>
 </div>
 <div id="board" class="panel"><div class="ph"><h4>🏆 오늘의 랭킹 <span id="myRank" style="color:#94a3b8;font-weight:400"></span></h4><button class="mb" id="rkMinus" title="랭킹 축소">－</button><button class="mb" id="rkPlus" title="랭킹 확대">＋</button></div><ol id="rank"></ol></div>
 <div id="miniWrap" class="panel">
@@ -119,7 +119,7 @@
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-const VERSION = '1.0.0-draft';
+const VERSION = '1.0.1-draft';
 // ===== 선생님 로그인 (데모용) =====
 // 주의: 브라우저 안에서만 확인하는 데모 로그인입니다. 실제 서비스에서는 서버 인증으로 바꿔야 해요.
 const TEACHER_PASSWORD = '1234';
@@ -810,8 +810,20 @@ function renderAttend() {
     + `<td style="text-align:right;color:${a.seated ? '#22c55e' : a.attTime ? '#facc15' : '#94a3b8'}">${a.seated ? '✅ 착석' : a.attTime ? '🚶 자리 비움' : '⬜ 미출석'}</td>`
     + `<td style="text-align:right;color:#94a3b8;font-size:11px;padding-left:6px">${a.attTime || ''}</td></tr>`).join('');
 }
-function showAttend(on) { $('attend').style.display = on ? 'block' : 'none'; renderAttend(); }
+function showAttend(on) { $('attend').style.display = on ? 'block' : 'none'; applyAttend(); }
 $('attBtn').onclick = () => { showAttend($('attend').style.display === 'none'); $('attBtn').blur(); };
+// 출석부 접기/펼치기: 접으면 제목과 출석 수(예: 7/10)만 보여요
+if (ui.att == null) ui.att = 1;
+function applyAttend() {
+  $('attBody').style.display = ui.att ? 'block' : 'none';
+  $('attMinus').disabled = ui.att === 0; $('attPlus').disabled = ui.att === 1;
+  $('attend').style.width = ui.att ? '230px' : 'auto';
+  saveUI(); renderAttend();
+}
+$('attMinus').onclick = () => { ui.att = 0; applyAttend(); };
+$('attPlus').onclick = () => { ui.att = 1; applyAttend(); };
+$('attClose').onclick = () => showAttend(false);
+['attMinus', 'attPlus', 'attClose'].forEach(id => $(id).addEventListener('click', e => e.currentTarget.blur()));
 function gatherToLecture(auto = false) {
   if (!me) return;
   if (soccer.on) endSoccer('수업 시간이 되어 경기를 마쳤어요');

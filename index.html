@@ -15,7 +15,19 @@
   #board{top:12px;right:244px;width:190px;font-size:13px}
   #board h4,#hud h4{margin:0 0 4px;font-size:13px}
   #board ol{margin:0;padding-left:20px} #board li.me{color:var(--accent);font-weight:700}
-  #mini{top:12px;right:12px;padding:6px}
+  .ph{display:flex;gap:4px;align-items:center;margin-bottom:4px}
+  .ph h4{flex:1;margin:0!important;font-size:13px}
+  #miniWrap{top:12px;right:12px;padding:6px}
+  #mini{display:block}
+  #miniBar{display:flex;gap:4px;align-items:center;margin-bottom:4px;font-size:12px}
+  #miniTitle{flex:1;color:var(--muted)}
+  .mb{background:#1e293b;color:var(--fg);border:1px solid #334155;border-radius:6px;padding:1px 7px;cursor:pointer;font-size:12px}
+  .mb:disabled{opacity:.35;cursor:default}
+  .tt{width:100%;border-collapse:collapse;font-size:13px;text-align:center}
+  .tt th,.tt td{border:1px solid #334155;padding:6px 4px}
+  .tt th{background:#1e293b} .tt td.sub{cursor:pointer} .tt td.sub:hover{background:#334155}
+  .tt .today{background:rgba(56,189,248,.15)} .tt td.now{background:#38bdf8;color:#0f172a;font-weight:700}
+  .tt .lunch td{color:#facc15;background:rgba(250,204,21,.08)}
   #chat{left:12px;bottom:12px;width:340px;height:230px;display:flex;flex-direction:column;font-size:13px}
   #log{flex:1;overflow-y:auto;margin-bottom:6px} #log div{margin:2px 0} #log .sys{color:#facc15} #log .me{color:var(--accent)}
   #chat input{width:100%;padding:7px 9px;border-radius:8px;border:1px solid #334155;background:#0b1222;color:var(--fg)}
@@ -42,15 +54,18 @@
 <div id="tags"></div>
 <div id="hud" class="panel"><h4>🏫 에듀버스 EduVerse <span class="ver" id="ver"></span></h4>
   🟢 접속 중 <b id="online">10</b>명 · 📍 <span id="zone">광장</span><br>⭐ 점수 <b id="score">0</b> · 🏅 <span id="badges">-</span>
-  <div style="margin-top:6px;display:flex;gap:6px"><span id="role" style="font-size:12px;color:#94a3b8;align-self:center"></span><button class="btn primary teacher-only" id="gather" style="font-size:13px">📢 강의실로 모이기</button><button class="btn teacher-only" id="attBtn" style="font-size:13px">📋 출석부</button></div></div>
+  <div style="margin-top:6px;display:flex;gap:6px"><span id="role" style="font-size:12px;color:#94a3b8;align-self:center"></span><button class="btn" id="ttBtn" style="font-size:13px">🗓 시간표</button><button class="btn primary teacher-only" id="gather" style="font-size:13px">📢 강의실로 모이기</button><button class="btn teacher-only" id="attBtn" style="font-size:13px">📋 출석부</button></div></div>
 <div id="attend" class="panel" style="top:244px;right:12px;width:230px;font-size:13px;display:none">
   <h4 style="margin:0 0 6px;font-size:13px">📋 출석부 · <span id="attCount">0/10</span></h4>
   <table style="width:100%;border-collapse:collapse" id="attTable"></table>
 </div>
-<div id="board" class="panel"><h4>🏆 오늘의 랭킹</h4><ol id="rank"></ol></div>
-<canvas id="mini" class="panel" width="220" height="220"></canvas>
+<div id="board" class="panel"><div class="ph"><h4>🏆 오늘의 랭킹 <span id="myRank" style="color:#94a3b8;font-weight:400"></span></h4><button class="mb" id="rkMinus" title="랭킹 축소">－</button><button class="mb" id="rkPlus" title="랭킹 확대">＋</button></div><ol id="rank"></ol></div>
+<div id="miniWrap" class="panel">
+  <div id="miniBar"><span id="miniTitle">🗺 지도</span><button class="mb" id="miniMinus" title="지도 축소">－</button><button class="mb" id="miniPlus" title="지도 확대">＋</button><button class="mb" id="miniFold" title="지도 접기">접기</button></div>
+  <canvas id="mini" width="220" height="220"></canvas>
+</div>
 <div id="help" class="panel">WASD 이동 · 드래그 시점 · 휠 줌 · E 상호작용 · Enter 채팅</div>
-<div id="chat" class="panel"><div id="log"></div><input id="msg" placeholder="Enter로 채팅..." maxlength="80"></div>
+<div id="chat" class="panel"><div class="ph"><h4>💬 채팅 <span id="unread" style="color:#facc15"></span></h4><button class="mb" id="chMinus" title="채팅창 축소">－</button><button class="mb" id="chPlus" title="채팅창 확대">＋</button></div><div id="log"></div><input id="msg" placeholder="Enter로 채팅..." maxlength="80"></div>
 <div id="emotes" class="panel"><button data-e="👋">👋</button><button data-e="👏">👏</button><button data-e="❓">❓</button><button data-e="❤️">❤️</button></div>
 <div id="prompt"></div>
 <div id="modal" class="modal"><div class="box" id="mbox"></div></div>
@@ -71,7 +86,7 @@
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-const VERSION = '0.5.0-draft';
+const VERSION = '0.6.0-draft';
 // ===== 선생님 로그인 (데모용) =====
 // 주의: 브라우저 안에서만 확인하는 데모 로그인입니다. 실제 서비스에서는 서버 인증으로 바꿔야 해요.
 const TEACHER_PASSWORD = '1234';
@@ -342,7 +357,7 @@ function spawnMates() {
 
 // ---------- Chat ----------
 const log = $('log');
-function addChat(who, text, cls = '') { const d = document.createElement('div'); d.className = cls; d.innerHTML = who ? `<b>${who}</b>: ` : ''; d.append(text); log.appendChild(d); log.scrollTop = log.scrollHeight; while (log.children.length > 80) log.firstChild.remove(); }
+function addChat(who, text, cls = '') { const d = document.createElement('div'); d.className = cls; d.innerHTML = who ? `<b>${who}</b>: ` : ''; d.append(text); log.appendChild(d); log.scrollTop = log.scrollHeight; while (log.children.length > 80) log.firstChild.remove(); if (ui.chat === 0) $('unread').textContent = `(새 메시지 ${++unread})`; }
 function sys(t) { addChat('', '📢 ' + t, 'sys'); }
 function mateSay(m, t) { say(m, t); addChat(m.name, t); }
 function replyTo(text) {
@@ -373,15 +388,46 @@ function addScore(n, why) { state.score += n; me.score = state.score; $('score')
 function badge(name) { if (state.badges.has(name)) return; state.badges.add(name); $('badges').textContent = [...state.badges].join(' '); sys(`🏅 배지 획득: ${name}!`); setTimeout(() => { const m = pick(mates); mateSay(m, pick([`${me.name} 축하해!! 🎉`, `와 ${me.name} 대박`, '나도 그 배지 갖고 싶다!'])); }, 1200); save(); }
 function save() { try { localStorage.setItem('eduverse', JSON.stringify({ score: state.score, badges: [...state.badges], planets: [...state.planets], hist: [...state.hist] })); } catch (e) { } }
 function load() { try { const d = JSON.parse(localStorage.getItem('eduverse') || 'null'); if (d) { state.score = d.score || 0; d.badges.forEach(b => state.badges.add(b)); d.planets.forEach(p => state.planets.add(p)); d.hist.forEach(h => state.hist.add(h)); } } catch (e) { } }
+// ---------- Ranking / chat size menu ----------
+const ui = { rank: 2, chat: 2 }; // rank: 0 접기 / 1 상위3 / 2 전체 · chat: 0 접기 / 1 작게 / 2 보통 / 3 크게
+try { Object.assign(ui, JSON.parse(localStorage.getItem('eduverse-ui') || '{}')); } catch (e) { }
+const CHAT_H = [null, 150, 230, 380], CHAT_W = [340, 340, 340, 440];
+let unread = 0;
+function saveUI() { try { localStorage.setItem('eduverse-ui', JSON.stringify(ui)); } catch (e) { } }
+function applyRank() {
+  $('rkMinus').disabled = ui.rank === 0; $('rkPlus').disabled = ui.rank === 2;
+  $('rank').style.display = ui.rank === 0 ? 'none' : 'block';
+  saveUI(); renderRank();
+}
+function applyChat() {
+  const c = $('chat'), lv = ui.chat;
+  $('chMinus').disabled = lv === 0; $('chPlus').disabled = lv === 3;
+  $('log').style.display = lv === 0 ? 'none' : 'block';
+  c.style.height = lv === 0 ? 'auto' : Math.max(110, Math.min(CHAT_H[lv], innerHeight - 140)) + 'px';
+  c.style.width = innerWidth < 760 ? '' : CHAT_W[lv] + 'px';
+  if (lv > 0) { unread = 0; $('unread').textContent = ''; $('log').scrollTop = $('log').scrollHeight; }
+  $('help').style.bottom = c.offsetHeight + 22 + 'px';
+  saveUI();
+}
+$('rkMinus').onclick = () => { if (ui.rank > 0) { ui.rank--; applyRank(); } };
+$('rkPlus').onclick = () => { if (ui.rank < 2) { ui.rank++; applyRank(); } };
+$('chMinus').onclick = () => { if (ui.chat > 0) { ui.chat--; applyChat(); } };
+$('chPlus').onclick = () => { if (ui.chat < 3) { ui.chat++; applyChat(); } };
+['rkMinus', 'rkPlus', 'chMinus', 'chPlus'].forEach(id => $(id).addEventListener('click', e => e.currentTarget.blur()));
 function renderRank() {
+  if (!me) return;
   const all = (isTeacher ? [...mates] : [...mates, me]).sort((a, b) => b.score - a.score);
-  $('rank').innerHTML = all.map(a => `<li class="${a === me ? 'me' : ''}">${a.name} · ${a.score}</li>`).join('');
+  const myPos = all.indexOf(me);
+  $('myRank').textContent = ui.rank === 0 && myPos >= 0 ? `· 나 ${myPos + 1}위` : '';
+  let list = all.map((a, i) => ({ a, i }));
+  if (ui.rank === 1) list = list.filter(({ a, i }) => i < 3 || a === me);
+  $('rank').innerHTML = list.map(({ a, i }) => `<li value="${i + 1}" class="${a === me ? 'me' : ''}">${a.name} · ${a.score}</li>`).join('');
 }
 
 // ---------- Modals ----------
 const modal = $('modal'), mbox = $('mbox');
 let modalOpen = false;
-function openModal(html) { mbox.innerHTML = html; modal.style.display = 'flex'; modalOpen = true; }
+function openModal(html) { mbox.style.width = ''; mbox.innerHTML = html; modal.style.display = 'flex'; modalOpen = true; }
 function closeModal() { modal.style.display = 'none'; modalOpen = false; }
 modal.addEventListener('click', e => { if (e.target === modal || e.target.dataset.close !== undefined) closeModal(); });
 
@@ -573,8 +619,31 @@ const mini = $('mini').getContext('2d');
 const MINI_EXTRA = [ // 지도에 표시할 건물 이름
   { name: '본관', x: 0, z: -66 }, { name: '체육관', x: 70, z: -35 }, { name: '급식실', x: -70, z: -35 },
 ];
+// ---------- Minimap size menu ----------
+const MINI_SIZES = [110, 160, 220];
+let miniIdx = 2, miniOpen = true;
+try { const s = JSON.parse(localStorage.getItem('eduverse-mini') || 'null'); if (s) { miniIdx = Math.min(2, Math.max(0, s.idx)); miniOpen = s.open !== false; } } catch (e) { }
+function applyMini() {
+  const S = MINI_SIZES[miniIdx];
+  $('mini').width = $('mini').height = S;
+  $('mini').style.display = miniOpen ? 'block' : 'none';
+  $('miniMinus').style.display = $('miniPlus').style.display = miniOpen ? '' : 'none';
+  $('miniMinus').disabled = miniIdx === 0; $('miniPlus').disabled = miniIdx === MINI_SIZES.length - 1;
+  $('miniFold').textContent = miniOpen ? '접기' : '펼치기';
+  $('miniWrap').style.width = miniOpen ? S + 14 + 'px' : 'auto';
+  // 랭킹판·출석부를 지도 크기에 맞춰 배치
+  const w = $('miniWrap').offsetWidth, h = $('miniWrap').offsetHeight;
+  $('board').style.right = w + 24 + 'px'; $('attend').style.top = h + 24 + 'px';
+  try { localStorage.setItem('eduverse-mini', JSON.stringify({ idx: miniIdx, open: miniOpen })); } catch (e) { }
+  if (miniOpen) drawMini();
+}
+$('miniMinus').onclick = () => { if (miniIdx > 0) { miniIdx--; applyMini(); } };
+$('miniPlus').onclick = () => { if (miniIdx < MINI_SIZES.length - 1) { miniIdx++; applyMini(); } };
+$('miniFold').onclick = () => { miniOpen = !miniOpen; applyMini(); };
+['miniMinus', 'miniPlus', 'miniFold'].forEach(id => $(id).addEventListener('click', e => e.currentTarget.blur()));
+
 function drawMini() {
-  const S = 220, k = S / (2 * WORLD + 6), X = x => S / 2 + x * k, Z = z => S / 2 + z * k;
+  const S = $('mini').width, f = S / 220, k = S / (2 * WORLD + 6), X = x => S / 2 + x * k, Z = z => S / 2 + z * k;
   const hex = c => '#' + c.toString(16).padStart(6, '0');
   mini.clearRect(0, 0, S, S);
   mini.fillStyle = '#3f7d3a'; mini.fillRect(X(-WORLD), Z(-WORLD), 2 * WORLD * k, 2 * WORLD * k);
@@ -584,14 +653,55 @@ function drawMini() {
   mini.textAlign = 'center'; mini.textBaseline = 'middle';
   const label = (t, x, y, size, color = '#fff') => { mini.font = `bold ${size}px Malgun Gothic, sans-serif`; mini.lineWidth = 3; mini.strokeStyle = 'rgba(0,0,0,.75)'; mini.strokeText(t, x, y); mini.fillStyle = color; mini.fillText(t, x, y); };
   // 장소 이름
-  for (const zn of ZONES) label(zn.name, X(zn.x), Z(zn.z) + (zn.key === 'plaza' ? 0 : -zn.r * k + 6), 10, '#fde68a');
-  for (const b of MINI_EXTRA) label(b.name, X(b.x), Z(b.z), 10, '#fde68a');
-  // 사람 이름
+  const zf = Math.max(8, Math.round(10 * f));
+  for (const zn of ZONES) label(zn.name, X(zn.x), Z(zn.z) + (zn.key === 'plaza' ? 0 : -zn.r * k + 6 * f), zf, '#fde68a');
+  for (const b of MINI_EXTRA) label(b.name, X(b.x), Z(b.z), zf, '#fde68a');
+  // 사람 이름 (작은 지도에서는 점만)
   const people = [...mates, ...(teacher && teacher !== me ? [teacher] : [])];
-  for (const m of people) { const px = X(m.g.position.x), pz = Z(m.g.position.z); mini.fillStyle = hex(m.color); mini.beginPath(); mini.arc(px, pz, 3, 0, 7); mini.fill(); label(m.name, px, pz - 7, 8); }
-  if (me) { const px = X(me.g.position.x), pz = Z(me.g.position.z); mini.fillStyle = '#fff'; mini.strokeStyle = '#38bdf8'; mini.lineWidth = 2; mini.beginPath(); mini.arc(px, pz, 4.5, 0, 7); mini.fill(); mini.stroke(); label('나', px, pz - 9, 10, '#38bdf8'); }
+  for (const m of people) { const px = X(m.g.position.x), pz = Z(m.g.position.z); mini.fillStyle = hex(m.color); mini.beginPath(); mini.arc(px, pz, 3 * Math.max(.7, f), 0, 7); mini.fill(); if (S >= 160) label(m.name, px, pz - 7, 8); }
+  if (me) { const px = X(me.g.position.x), pz = Z(me.g.position.z); mini.fillStyle = '#fff'; mini.strokeStyle = '#38bdf8'; mini.lineWidth = 2; mini.beginPath(); mini.arc(px, pz, 4.5, 0, 7); mini.fill(); mini.stroke(); label('나', px, pz - 9, zf, '#38bdf8'); }
 }
 let rankT = 0;
+applyMini(); applyRank(); applyChat();
+addEventListener('resize', () => { applyMini(); applyChat(); });
+
+// ---------- Timetable (월~금) ----------
+const PERIODS = [['1교시', '09:00', '09:45'], ['2교시', '09:55', '10:40'], ['3교시', '10:50', '11:35'], ['4교시', '11:45', '12:30'], ['점심', '12:30', '13:20'], ['5교시', '13:20', '14:05'], ['6교시', '14:15', '15:00']];
+const DAYS = ['월', '화', '수', '목', '금'];
+const TIMETABLE = [ // [요일][교시] (점심 제외 6교시)
+  ['국어', '수학', '과학', '사회', '체육', '창체'],
+  ['영어', '과학', '수학', '국어', '음악', '역사'],
+  ['수학', '국어', '체육', '과학', '미술', '미술'],
+  ['역사', '영어', '수학', '과학', '국어', '체육'],
+  ['과학', '수학', '국어', '역사', '영어', '동아리'],
+];
+const SUBJECT_ZONE = { 과학: 'science', 수학: 'math', 역사: 'history', 사회: 'history', 체육: 'ground', 국어: 'lecture', 영어: 'lecture', 창체: 'lecture', 음악: 'lecture', 미술: 'lecture', 동아리: 'plaza' };
+const SUBJECT_EMOJI = { 국어: '📖', 수학: '➗', 과학: '🔭', 사회: '🌏', 역사: '🏛', 영어: '🔤', 체육: '⚽', 음악: '🎵', 미술: '🎨', 창체: '🌱', 동아리: '🎲' };
+const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+function showTimetable() {
+  const now = new Date(), day = now.getDay() - 1, mins = now.getHours() * 60 + now.getMinutes();
+  const curP = PERIODS.findIndex(p => mins >= toMin(p[1]) && mins < toMin(p[2]));
+  let rows = '', si = 0;
+  PERIODS.forEach((p, pi) => {
+    if (p[0] === '점심') { rows += `<tr class="lunch"><td>🍚 점심</td><td colspan="5">${p[1]} ~ ${p[2]} · 급식실</td></tr>`; return; }
+    rows += `<tr><td><b>${p[0]}</b><br><small style="color:#94a3b8">${p[1]}</small></td>` + DAYS.map((_, d) => {
+      const s = TIMETABLE[d][si], cls = ['sub', d === day ? 'today' : '', d === day && pi === curP ? 'now' : ''].join(' ');
+      return `<td class="${cls}" data-s="${s}">${SUBJECT_EMOJI[s] || ''} ${s}</td>`;
+    }).join('') + '</tr>'; si++;
+  });
+  const curText = day >= 0 && day < 5 && curP >= 0 ? (PERIODS[curP][0] === '점심' ? '지금은 점심시간이에요 🍚' : `지금은 ${DAYS[day]}요일 ${PERIODS[curP][0]} · ${TIMETABLE[day][PERIODS.slice(0, curP).filter(p => p[0] !== '점심').length]} 시간이에요`) : day < 0 || day > 4 ? '오늘은 주말이에요 🎉' : '지금은 수업 시간이 아니에요';
+  openModal(`<h3>🗓 주간 시간표 (월~금)</h3><p style="margin:0 0 10px;color:#94a3b8;font-size:13px">${curText} · 과목을 누르면 해당 장소로 이동해요</p>
+    <table class="tt"><tr><th></th>${DAYS.map((d, i) => `<th class="${i === day ? 'today' : ''}">${d}${i === day ? ' (오늘)' : ''}</th>`).join('')}</tr>${rows}</table>
+    <div style="text-align:right;margin-top:12px"><button class="btn" data-close>닫기</button></div>`);
+  mbox.style.width = 'min(640px,96vw)';
+  mbox.querySelectorAll('td.sub').forEach(td => td.onclick = () => {
+    const zn = ZONES.find(z => z.key === SUBJECT_ZONE[td.dataset.s]); if (!zn || !me) return;
+    sitting = false; markSeat(me, false);
+    me.g.position.set(zn.x, 0, zn.z + (zn.key === 'plaza' ? 7 : zn.r - 3)); yaw = 0;
+    closeModal(); sys(`🗓 ${td.dataset.s} 수업 장소(${zn.name})로 이동했어요`);
+  });
+}
+$('ttBtn').onclick = () => { $('ttBtn').blur(); showTimetable(); };
 function tick() {
   requestAnimationFrame(tick);
   const dt = Math.min(clock.getDelta(), .05), T = clock.elapsedTime;

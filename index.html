@@ -85,7 +85,7 @@
   <div id="miniBar"><span id="miniTitle">🗺 지도</span><button class="mb" id="miniMinus" title="지도 축소">－</button><button class="mb" id="miniPlus" title="지도 확대">＋</button><button class="mb" id="miniFold" title="지도 접기">접기</button></div>
   <canvas id="mini" width="220" height="220"></canvas>
 </div>
-<div id="help" class="panel">WASD 이동 · 드래그 시점 · 휠 줌 · E 상호작용 · Enter 채팅</div>
+<div id="help" class="panel">클릭/WASD 이동 · 드래그 시점 · 휠 줌 · E 상호작용 · Enter 채팅</div>
 <div id="chat" class="panel"><div class="ph"><h4>💬 채팅 <span id="unread" style="color:#facc15"></span></h4><button class="mb" id="chMinus" title="채팅창 축소">－</button><button class="mb" id="chPlus" title="채팅창 확대">＋</button></div><div id="log"></div><input id="msg" placeholder="Enter로 채팅..." maxlength="80"></div>
 <div id="emotes" class="panel"><button data-e="👋">👋</button><button data-e="👏">👏</button><button data-e="❓">❓</button><button data-e="❤️">❤️</button></div>
 <div id="prompt"></div>
@@ -119,7 +119,7 @@
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-const VERSION = '0.9.0-draft';
+const VERSION = '1.0.0-draft';
 // ===== 선생님 로그인 (데모용) =====
 // 주의: 브라우저 안에서만 확인하는 데모 로그인입니다. 실제 서비스에서는 서버 인증으로 바꿔야 해요.
 const TEACHER_PASSWORD = '1234';
@@ -138,14 +138,14 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a0626);
-scene.fog = new THREE.Fog(0x1a1045, 110, 320);
+scene.fog = new THREE.Fog(0x1a1045, 160, 460);
 const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1200);
 function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 scene.add(new THREE.HemisphereLight(0xc7d2fe, 0x3b2a6e, 1.15));
 const sun = new THREE.DirectionalLight(0xe0e7ff, 1.15); // 은은한 달빛
 sun.position.set(30, 50, 20); sun.castShadow = true;
-Object.assign(sun.shadow.camera, { left: -100, right: 100, top: 100, bottom: -100, far: 200 }); sun.shadow.camera.updateProjectionMatrix();
+Object.assign(sun.shadow.camera, { left: -150, right: 150, top: 150, bottom: -150, far: 320 }); sun.shadow.camera.updateProjectionMatrix();
 sun.shadow.mapSize.set(2048, 2048); scene.add(sun);
 
 const mat = c => new THREE.MeshStandardMaterial({ color: c, roughness: .8 });
@@ -185,7 +185,7 @@ const mglow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('rgba(186
 // 캠퍼스 위를 떠다니는 반짝이 입자
 {
   const n = 260, pos = new Float32Array(n * 3);
-  for (let i = 0; i < n; i++) { pos[i * 3] = rnd(-90, 90); pos[i * 3 + 1] = rnd(1.5, 22); pos[i * 3 + 2] = rnd(-90, 90); }
+  for (let i = 0; i < n; i++) { pos[i * 3] = rnd(-130, 130); pos[i * 3 + 1] = rnd(1.5, 24); pos[i * 3 + 2] = rnd(-130, 130); }
   const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   space.sparkles = new THREE.Points(geo, new THREE.PointsMaterial({ size: .6, map: starTex, color: 0xa5f3fc, transparent: true, opacity: .9, depthWrite: false, blending: THREE.AdditiveBlending }));
   space.sparkleBase = pos.slice(); scene.add(space.sparkles);
@@ -228,8 +228,8 @@ function makeAstronaut(floating) {
   }
   scene.add(g);
   const a = { g, beacon, floating, t: rnd(0, 10), target: null, wait: rnd(0, 4) };
-  if (floating) { a.cx = rnd(-60, 60); a.cz = rnd(-50, 60); a.r = rnd(10, 22); a.h = rnd(7, 14); a.sp = rnd(.12, .22) * (Math.random() < .5 ? -1 : 1); }
-  else g.position.set(rnd(-70, 70), 0, rnd(-50, 85));
+  if (floating) { a.cx = rnd(-90, 90); a.cz = rnd(-70, 90); a.r = rnd(10, 22); a.h = rnd(7, 14); a.sp = rnd(.12, .22) * (Math.random() < .5 ? -1 : 1); }
+  else g.position.set(rnd(-110, 110), 0, rnd(-50, 110));
   astronauts.push(a);
 }
 for (let i = 0; i < 4; i++) makeAstronaut(false);
@@ -247,7 +247,7 @@ function updateAstronauts(dt, T) {
     }
     const p = a.g.position;
     if (a.wait > 0) { a.wait -= dt; p.y = Math.abs(Math.sin(a.t * 1.2)) * .05; continue; }
-    if (!a.target) a.target = { x: rnd(-80, 80), z: rnd(-55, 88) };
+    if (!a.target) a.target = { x: rnd(-120, 120), z: rnd(-55, 120) };
     const dx = a.target.x - p.x, dz = a.target.z - p.z, d = Math.hypot(dx, dz);
     if (d < .6) { a.target = null; a.wait = rnd(2, 7); continue; }
     const s = Math.min(d, 1.6 * dt); p.x += dx / d * s; p.z += dz / d * s; collide(p);
@@ -256,7 +256,7 @@ function updateAstronauts(dt, T) {
   }
 }
 
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(220, 220), mat(0x5fa86a));
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(320, 320), mat(0x5fa86a));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
 const ZONES = [
@@ -266,12 +266,14 @@ const ZONES = [
   { key: 'math', name: '수학 퀴즈존', x: -40, z: 0, r: 15, color: 0xfde68a },
   { key: 'history', name: '역사 전시관', x: 0, z: 40, r: 15, color: 0xd6b48a },
   { key: 'ground', name: '운동장', x: 0, z: 76, r: 16, color: 0xc8a26b, noPlat: true },
+  { key: 'english', name: '영어존', x: -85, z: 38, r: 16, color: 0xbfdbfe, noPath: true },
+  { key: 'game', name: '게임존', x: 85, z: 38, r: 16, color: 0x2e1065, noPath: true },
 ];
 for (const zn of ZONES) {
   if (zn.noPlat) continue;
   const p = new THREE.Mesh(new THREE.CylinderGeometry(zn.r, zn.r, .3, 48), mat(zn.color));
   p.position.set(zn.x, .15, zn.z); p.receiveShadow = true; scene.add(p);
-  if (zn.key !== 'plaza') { const path = box(4, .2, 25, 0xe7d8b5, zn.x / 2, .1, zn.z / 2); if (zn.x) path.rotation.y = Math.PI / 2; }
+  if (zn.key !== 'plaza' && !zn.noPath) { const path = box(4, .2, 25, 0xe7d8b5, zn.x / 2, .1, zn.z / 2); if (zn.x) path.rotation.y = Math.PI / 2; }
 }
 const colliders = []; // {x,z,r}
 // fountain
@@ -279,7 +281,10 @@ cyl(4, 4.5, 1, 0x94a3b8, 0, .5, 0); cyl(3.5, 3.5, .2, 0x38bdf8, 0, 1, 0); cyl(.5
 colliders.push({ x: 0, z: 0, r: 4.8 });
 // ---------- School campus ----------
 const RECTS = []; // 건물 충돌 박스 {x0,x1,z0,z1}
-const WORLD = 92;
+const WORLD = 135;
+// 대각선 길 (영어존 · 게임존으로) [시작x, 시작z, 끝x, 끝z]
+const EXTRA_PATHS = [[-50, 8, -74, 26], [50, 8, 74, 26]];
+EXTRA_PATHS.forEach(([ax, az, bx, bz]) => { const p = box(4, .2, Math.hypot(bx - ax, bz - az) + 4, 0xe7d8b5, (ax + bx) / 2, .1, (az + bz) / 2); p.rotation.y = Math.atan2(bx - ax, bz - az); });
 function wallTex(cols, rows, wall = '#f3e6c9', win = '#7dd3fc') {
   const cv = document.createElement('canvas'); cv.width = cols * 64; cv.height = rows * 64; const g = cv.getContext('2d');
   g.fillStyle = wall; g.fillRect(0, 0, cv.width, cv.height);
@@ -332,11 +337,84 @@ const flag = new THREE.Mesh(new THREE.PlaneGeometry(3, 2), new THREE.MeshBasicMa
 [[0, -WORLD - 1, 2 * WORLD + 4, .5], [0, WORLD + 1, 2 * WORLD + 4, .5], [-WORLD - 1, 0, .5, 2 * WORLD + 4], [WORLD + 1, 0, .5, 2 * WORLD + 4]].forEach(([x, z, w, d]) => box(w, 2, d, 0x166534, x, 1, z));
 // 나무 (담장 안쪽 둘레, 건물/운동장 피해서)
 function tree(x, z) { cyl(.4, .5, 3, 0x8b5a2b, x, 1.5, z, 8); const top = new THREE.Mesh(new THREE.ConeGeometry(2.2, 5, 10), mat(0x2f7d32)); top.position.set(x, 5, z); top.castShadow = true; scene.add(top); colliders.push({ x, z, r: .6 }); }
-for (let t = -84; t <= 84; t += 12) for (const [x, z] of [[t, -86], [t, 86], [-86, t], [86, t]]) {
-  if (RECTS.some(r => x > r.x0 - 3 && x < r.x1 + 3 && z > r.z0 - 3 && z < r.z1 + 3)) continue;
-  if (Math.abs(x) < 42 && z > 56) continue; // 운동장
-  tree(x, z);
+const EDGE = WORLD - 6;
+const segDist = (px, pz, ax, az, bx, bz) => { const vx = bx - ax, vz = bz - az, t = Math.max(0, Math.min(1, ((px - ax) * vx + (pz - az) * vz) / (vx * vx + vz * vz))); return Math.hypot(px - ax - vx * t, pz - az - vz * t); };
+function treeOK(x, z) {
+  if (RECTS.some(r => x > r.x0 - 4 && x < r.x1 + 4 && z > r.z0 - 4 && z < r.z1 + 4)) return false;
+  if (Math.abs(x) < 42 && z > 56 && z < 96) return false; // 운동장
+  if (ZONES.some(zn => Math.hypot(x - zn.x, z - zn.z) < zn.r + 4)) return false;
+  if (Math.abs(x) < 4 || Math.abs(z) < 4) return false; // 십자 길
+  if (EXTRA_PATHS.some(([ax, az, bx, bz]) => segDist(x, z, ax, az, bx, bz) < 4)) return false;
+  return true;
 }
+for (let t = -EDGE; t <= EDGE; t += 12) for (const [x, z] of [[t, -EDGE], [t, EDGE], [-EDGE, t], [EDGE, t]]) if (treeOK(x, z)) tree(x, z);
+for (let i = 0, n = 0; i < 400 && n < 45; i++) { const x = rnd(-EDGE + 8, EDGE - 8), z = rnd(-EDGE + 8, EDGE - 8); if (treeOK(x, z) && !colliders.some(c => Math.hypot(c.x - x, c.z - z) < 6)) { tree(x, z); n++; } }
+// ---------- 🔤 영어존 (-85, 38) ----------
+const EN = { x: -85, z: 38 };
+sign('🔤 ENGLISH ZONE', -70, 24, Math.PI * .75);
+// 빨간 공중전화 부스
+box(2.4, 4.6, 2.4, 0xdc2626, EN.x - 11, 2.3, EN.z - 8); box(2.7, .4, 2.7, 0xb91c1c, EN.x - 11, 4.8, EN.z - 8); colliders.push({ x: EN.x - 11, z: EN.z - 8, r: 1.6 });
+plate('TELEPHONE', EN.x - 11, 4.1, EN.z - 6.75, 2.2, '#111827');
+// 알파벳 블록
+const ABC_COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
+'ABCDEF'.split('').forEach((L, i) => {
+  const tex = textTexture([L], 256, 256, ABC_COLORS[i], '#fff', 190), m = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 1.6), new THREE.MeshStandardMaterial({ map: tex }));
+  const a = Math.PI * (1.1 + i * .16), x = EN.x + Math.cos(a) * 12.5, z = EN.z + Math.sin(a) * 12.5;
+  m.position.set(x, .8, z); m.rotation.y = i * .4; m.castShadow = true; scene.add(m); colliders.push({ x, z, r: 1.1 });
+});
+// 단어 카드 키오스크 3개
+const EN_KIOSKS = [[EN.x - 5, EN.z + 6], [EN.x, EN.z + 9], [EN.x + 5, EN.z + 6]];
+const enCards = EN_KIOSKS.map(([x, z], i) => {
+  cyl(.7, .9, 1.1, 0x1d4ed8, x, .55, z); colliders.push({ x, z, r: 1 });
+  const c = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.1), new THREE.MeshBasicMaterial({ map: textTexture([['🍎 Apple', '🐶 Dog', '🚀 Rocket'][i], 'Word Card'], 512, 350, '#1e3a8a', '#fff', 90), side: THREE.DoubleSide }));
+  c.position.set(x, 2.2, z); scene.add(c); return c;
+});
+// 칠판
+box(10, 4.5, .4, 0x78350f, EN.x, 2.6, EN.z - 13); colliders.push(...[-4, -1.3, 1.3, 4].map(d => ({ x: EN.x + d, z: EN.z - 13, r: 1.4 })));
+const enBoard = new THREE.Mesh(new THREE.PlaneGeometry(9.2, 3.8), new THREE.MeshBasicMaterial({ map: textTexture(['Today\'s Expression', '"Nice to meet you!" 만나서 반가워!'], 1024, 420, '#14532d', '#f8fafc', 78) }));
+enBoard.position.set(EN.x, 2.65, EN.z - 12.78); scene.add(enBoard);
+
+// ---------- 🎮 게임존 (85, 38) ----------
+const GZ = { x: 85, z: 38 };
+sign('🎮 GAME ZONE', 70, 24, -Math.PI * .75);
+const neon = c => new THREE.MeshBasicMaterial({ color: c });
+// 네온 아치
+const archRy = Math.atan2(24, 18) + Math.PI / 2; // 게임존으로 들어오는 길과 마주 보도록
+const arch = new THREE.Mesh(new THREE.TorusGeometry(6, .3, 10, 40, Math.PI), neon(0x67e8f9)); arch.position.set(GZ.x - 11, 0, GZ.z - 10); arch.rotation.y = archRy; scene.add(arch);
+const arch2 = new THREE.Mesh(new THREE.TorusGeometry(5.2, .2, 10, 40, Math.PI), neon(0xf0abfc)); arch2.position.copy(arch.position); arch2.rotation.y = archRy; scene.add(arch2);
+// 빛나는 바닥 타일
+const gameTiles = [];
+for (let i = -3; i <= 3; i++) for (let j = -3; j <= 3; j++) {
+  if ((i + j) % 2) continue;
+  const t = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ color: 0x7c3aed, transparent: true, opacity: .55 }));
+  t.rotation.x = -Math.PI / 2; t.position.set(GZ.x + i * 3.2, .32, GZ.z + j * 3.2); scene.add(t); gameTiles.push(t);
+}
+// 아케이드 게임기 3대
+const ARCADES = [
+  { key: 'reaction', title: '⚡ 반응속도', color: 0xef4444, x: GZ.x - 7, z: GZ.z - 9, ry: .5 },
+  { key: 'memory', title: '🃏 짝 맞추기', color: 0x3b82f6, x: GZ.x, z: GZ.z - 11, ry: 0 },
+  { key: 'numbers', title: '🔢 1→16 터치', color: 0x22c55e, x: GZ.x + 7, z: GZ.z - 9, ry: -.5 },
+];
+const arcadeScreens = ARCADES.map(a => {
+  const g = new THREE.Group(); g.position.set(a.x, 0, a.z); g.rotation.y = a.ry; scene.add(g);
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.4, 1.5), mat(a.color)); body.position.y = 1.7; body.castShadow = true; g.add(body);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.3), new THREE.MeshBasicMaterial({ map: textTexture([a.title, 'PRESS E'], 512, 400, '#0f172a', '#67e8f9', 80) })); scr.position.set(0, 2.2, .76); g.add(scr);
+  const top = new THREE.Mesh(new THREE.BoxGeometry(2.3, .5, 1.6), neon(0xfde68a)); top.position.y = 3.6; g.add(top);
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(2.2, .2, .8), mat(0x111827)); panel.position.set(0, 1.25, .9); panel.rotation.x = .3; g.add(panel);
+  colliders.push({ x: a.x, z: a.z, r: 1.5 });
+  const fx = a.x + Math.sin(a.ry) * 2.4, fz = a.z + Math.cos(a.ry) * 2.4; a.ix = fx; a.iz = fz;
+  return scr;
+});
+// 거대 주사위
+const dice = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.4, 2.4), new THREE.MeshStandardMaterial({ map: textTexture(['🎲'], 256, 256, '#ffffff', '#111', 200) }));
+dice.position.set(GZ.x + 10, 2.2, GZ.z + 6); dice.castShadow = true; scene.add(dice); colliders.push({ x: GZ.x + 10, z: GZ.z + 6, r: 1.8 });
+function updateZonesDecor(dt, T) {
+  gameTiles.forEach((t, i) => { const h = (T * .15 + i * .07) % 1; t.material.color.setHSL(.7 + h * .3, .9, .55); t.material.opacity = .35 + Math.sin(T * 3 + i) * .2; });
+  dice.rotation.y += dt * .6; dice.rotation.x = Math.sin(T) * .3; dice.position.y = 2.6 + Math.sin(T * 1.6) * .4;
+  enCards.forEach((c, i) => { c.rotation.y = T * .8 + i; c.position.y = 2.2 + Math.sin(T * 2 + i) * .12; });
+  arch.material.color.setHSL((T * .1) % 1, .9, .65);
+}
+
 // 화단
 [[-14, -57], [14, -57], [-14, 18], [14, 18]].forEach(([x, z]) => { box(6, .5, 2, 0x78350f, x, .25, z); for (let i = 0; i < 5; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(.3, 8, 6), mat(pick([0xf472b6, 0xfacc15, 0xf87171, 0xa78bfa]))); f.position.set(x - 2 + i, .75, z); scene.add(f); } });
 
@@ -473,6 +551,8 @@ const ZONE_LINES = {
   math: ['방정식 하나 풀었다!', '이거 너무 어려운데ㅠ', '분수 문제 나왔어', '연속 정답 가즈아'],
   ground: ['축구할 사람~ ⚽', '운동장 진짜 넓다!', '달리기 시합하자 🏃', '철봉 매달리기 해볼까?'],
   history: ['세종대왕 최고 👑', '직지가 금속활자구나', '고조선이 제일 오래됐네', '석굴암 가보고 싶다'],
+  english: ['Hello! 영어존 왔다 🔤', 'apple은 사과! 🍎', 'How are you? ㅎㅎ', '단어 카드 다 맞혔어!', 'Lily 선생님 발음 좋다 🗣'],
+  game: ['반응속도 200ms 찍었다 ⚡', '짝 맞추기 재밌다 🃏', '게임존 불빛 예쁘다 ✨', '1부터 16까지 누가 빨리 누르나!'],
 };
 // ---------- 친구들의 성격과 말투 ----------
 // {me} = 내 이름, {f} = 다른 친구 이름
@@ -760,6 +840,127 @@ function gatherToLecture(auto = false) {
 }
 $('gather').onclick = () => { gatherToLecture(); netSend({ t: 'gather', id: net.myId, by: me.name }); };
 
+// ---------- 🔤 영어존 활동 ----------
+const npcs = [];
+const lily = makeAvatar(0x2563eb, 'Ms. Lily 🇬🇧', 'fox'); lily.name = 'Ms. Lily'; lily.tag.style.display = 'none';
+lily.g.position.set(EN.x - 6, 0, EN.z - 9); lily.g.rotation.y = .6; npcs.push(lily); colliders.push({ x: EN.x - 6, z: EN.z - 9, r: .8 });
+let lilyT = 4;
+const LILY_LINES = ['Hello, everyone! 👋', 'Let\'s practice English together!', 'Great job! 👏', 'How are you today?', 'Don\'t be shy, just try! 😊', 'Practice makes perfect!'];
+const WORDS = [['🍎', 'apple', '사과'], ['🐶', 'dog', '강아지'], ['🐱', 'cat', '고양이'], ['📚', 'book', '책'], ['✏️', 'pencil', '연필'], ['🏫', 'school', '학교'], ['☀️', 'sun', '태양'], ['🌙', 'moon', '달'], ['⭐', 'star', '별'], ['🚀', 'rocket', '로켓'], ['🍌', 'banana', '바나나'], ['🐘', 'elephant', '코끼리'], ['🌈', 'rainbow', '무지개'], ['🎵', 'music', '음악'], ['🏠', 'house', '집'], ['🚗', 'car', '자동차'], ['🌳', 'tree', '나무'], ['💧', 'water', '물'], ['🧑‍🚀', 'astronaut', '우주비행사'], ['🪐', 'planet', '행성'], ['🐟', 'fish', '물고기'], ['🍕', 'pizza', '피자']];
+const TALKS = [
+  ['How are you?', 'I\'m fine, thank you. And you?', ['I\'m 10 years old.', 'It\'s a pencil.'], '안부를 물을 땐 기분으로 대답해요.'],
+  ['What\'s your name?', 'My name is {me}.', ['I like pizza.', 'It\'s sunny.'], '이름을 물으면 My name is ~ 로 대답해요.'],
+  ['Nice to meet you!', 'Nice to meet you, too!', ['Goodbye!', 'I\'m hungry.'], '같은 인사에 too를 붙여요.'],
+  ['What time is it?', 'It\'s three o\'clock.', ['It\'s blue.', 'Yes, I do.'], '시간은 It\'s ~ o\'clock.'],
+  ['Do you like soccer?', 'Yes, I do!', ['It\'s Monday.', 'I\'m from Korea.'], 'Do you ~? 에는 Yes, I do / No, I don\'t.'],
+  ['Where is the library?', 'It\'s next to the gym.', ['I\'m fine.', 'It\'s 5 dollars.'], '장소는 next to(옆에), in front of(앞에)로 말해요.'],
+  ['How\'s the weather today?', 'It\'s sunny and warm.', ['I\'m a student.', 'Thank you!'], '날씨는 It\'s sunny / rainy / cloudy.'],
+  ['Can you help me?', 'Sure! What do you need?', ['I have a cat.', 'It\'s on Friday.'], '도와줄 땐 Sure! 라고 해요.'],
+];
+const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
+function wordQuiz(n = 0, ok = 0, pool = shuffle(WORDS).slice(0, 5)) {
+  if (n === pool.length) {
+    openModal(`<h3>🔤 결과: ${ok}/${pool.length}</h3><p>${ok === pool.length ? 'Perfect! 완벽해요 🎉' : ok >= 3 ? 'Good job! 잘했어요 👏' : 'Nice try! 다시 도전해요 💪'}</p><button class="btn primary" data-close>닫기</button>`);
+    if (ok === pool.length) { badge('🔤영어왕'); say(lily, `Excellent, ${me.name}! 🌟`, 4); }
+    return;
+  }
+  const [emo, en, ko] = pool[n], mode = Math.random() < .5 ? 'emoji' : 'ko';
+  const choices = shuffle([en, ...shuffle(WORDS.filter(w => w[1] !== en)).slice(0, 3).map(w => w[1])]);
+  openModal(`<h3>🔤 단어 카드 ${n + 1}/${pool.length}</h3><p style="font-size:${mode === 'emoji' ? 56 : 26}px;text-align:center;margin:10px 0">${mode === 'emoji' ? emo : `"${ko}"`}</p><p style="text-align:center;color:var(--muted);margin:0">${mode === 'emoji' ? '그림에 맞는 영어 단어는?' : '이 뜻의 영어 단어는?'}</p><div class="choices" style="grid-template-columns:1fr 1fr">${choices.map(c => `<button class="btn" data-v="${c}" style="font-size:17px">${c}</button>`).join('')}</div>`);
+  mbox.querySelectorAll('[data-v]').forEach(b => b.onclick = () => {
+    const right = b.dataset.v === en; b.style.background = right ? '#16a34a' : '#dc2626';
+    if (right) addScore(10, `"${en}" 정답!`); else sys(`정답은 ${emo} ${en} (${ko})`);
+    setTimeout(() => wordQuiz(n + 1, ok + right, pool), 650);
+  });
+}
+function talkPractice(n = 0, ok = 0, pool = shuffle(TALKS).slice(0, 3)) {
+  if (n === pool.length) {
+    openModal(`<h3>🗣 회화 연습 결과: ${ok}/${pool.length}</h3><p>Ms. Lily: "${ok === pool.length ? 'Wonderful! Your English is great!' : 'Good try! See you again!'}"</p><button class="btn primary" data-close>Bye! 👋</button>`);
+    say(lily, ok === pool.length ? 'Wonderful! 🌟' : 'See you again! 👋', 4); return;
+  }
+  const [q, ans, wrong, tip] = pool[n], a = fillT(ans);
+  say(lily, q, 5);
+  openModal(`<h3>🗣 Ms. Lily와 회화 연습 ${n + 1}/${pool.length}</h3><p style="font-size:20px">🦊 <b>"${q}"</b></p><p style="color:var(--muted);font-size:13px;margin-top:-6px">알맞은 대답을 골라 보세요</p><div class="choices">${shuffle([a, ...wrong]).map(c => `<button class="btn" data-v="${c.replace(/"/g, '&quot;')}">${c}</button>`).join('')}</div><p id="tip" style="min-height:20px;font-size:13px;color:var(--gold)"></p>`);
+  mbox.querySelectorAll('[data-v]').forEach(b => b.onclick = () => {
+    const right = b.dataset.v === a; b.style.background = right ? '#16a34a' : '#dc2626';
+    $('tip').textContent = (right ? '⭕ ' : `❌ 정답: "${a}" · `) + tip;
+    if (right) addScore(10, '회화 정답'); say(me, b.dataset.v, 3);
+    setTimeout(() => talkPractice(n + 1, ok + right, pool), 1600);
+  });
+}
+EN_KIOSKS.forEach(([x, z]) => INTERACTS.push({ x, z: z + 1.6, label: 'E: 🔤 영어 단어 카드 퀴즈', act: () => wordQuiz() }));
+INTERACTS.push({ x: EN.x - 5, z: EN.z - 7.6, label: 'E: 🗣 Ms. Lily와 회화 연습', act: () => talkPractice() });
+function updateNpcs(dt) {
+  lilyT -= dt;
+  if (me && lilyT < 0) { lilyT = rnd(7, 13); if (me.g.position.distanceTo(lily.g.position) < 25) say(lily, pick(LILY_LINES), 4); }
+  if (me && me.g.position.distanceTo(lily.g.position) < 8) lily.g.rotation.y = Math.atan2(me.g.position.x - lily.g.position.x, me.g.position.z - lily.g.position.z);
+}
+
+// ---------- 🎮 게임존 미니게임 ----------
+const games = { best: {}, played: new Set() };
+try { Object.assign(games.best, JSON.parse(localStorage.getItem('eduverse-games') || '{}')); } catch (e) { }
+function saveBest(key, val, lowerIsBetter) {
+  const old = games.best[key], better = old == null || (lowerIsBetter ? val < old : val > old);
+  if (better) { games.best[key] = val; try { localStorage.setItem('eduverse-games', JSON.stringify(games.best)); } catch (e) { } }
+  games.played.add(key); if (games.played.size === 3) badge('🎮게임마스터');
+  return better;
+}
+const gameTitle = (t, k, unit) => `<h3>${t} <small style="color:var(--muted);font-weight:400">${games.best[k] != null ? `최고 기록 ${games.best[k]}${unit}` : ''}</small></h3>`;
+// ⚡ 반응속도
+function reactionGame(round = 0, times = []) {
+  if (round === 3) {
+    const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length), pts = avg < 250 ? 15 : avg < 350 ? 10 : 5;
+    const nb = saveBest('reaction', avg, true);
+    openModal(`${gameTitle('⚡ 반응속도 결과', 'reaction', 'ms')}<p style="font-size:30px;text-align:center;margin:8px 0">${avg} ms</p><p style="text-align:center">${times.join(' · ')} ms ${nb ? '<br>🎉 새 기록!' : ''}</p><div class="choices"><button class="btn primary" id="again">다시 하기</button><button class="btn" data-close>닫기</button></div>`);
+    addScore(pts, '반응속도 게임'); $('again').onclick = () => reactionGame(); return;
+  }
+  openModal(`${gameTitle(`⚡ 반응속도 ${round + 1}/3`, 'reaction', 'ms')}<div id="rx" style="height:200px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;cursor:pointer;user-select:none;background:#b91c1c">빨간색… 기다려요!</div><p style="color:var(--muted);font-size:13px;text-align:center">초록색으로 바뀌는 순간 클릭하세요</p>`);
+  const rx = $('rx'); let go = 0;
+  const tm = setTimeout(() => { if (!$('rx')) return; go = performance.now(); rx.style.background = '#16a34a'; rx.textContent = '지금! 클릭!! ⚡'; }, rnd(1500, 3800));
+  rx.onclick = () => {
+    if (!go) { clearTimeout(tm); rx.style.background = '#a16207'; rx.textContent = '너무 빨라요! 😅 다시'; setTimeout(() => reactionGame(round, times), 900); return; }
+    const t = Math.round(performance.now() - go); rx.textContent = `${t} ms`; rx.onclick = null;
+    setTimeout(() => reactionGame(round + 1, [...times, t]), 700);
+  };
+}
+// 🃏 짝 맞추기
+function memoryGame() {
+  const cards = shuffle(['🍎', '🚀', '🪐', '⚽', '🎵', '🐼'].flatMap(e => [e, e]));
+  let open = [], done = 0, moves = 0, lock = false;
+  openModal(`${gameTitle('🃏 짝 맞추기', 'memory', '번')}<p style="margin:0 0 8px;color:var(--muted);font-size:13px">같은 그림 두 장을 찾아요 · 시도 <b id="mv">0</b>번</p><div id="mg" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${cards.map((c, i) => `<button class="btn" data-i="${i}" style="height:64px;font-size:30px">❔</button>`).join('')}</div><div style="text-align:right;margin-top:10px"><button class="btn" data-close>그만하기</button></div>`);
+  mbox.querySelectorAll('[data-i]').forEach(b => b.onclick = () => {
+    const i = +b.dataset.i; if (lock || b.dataset.done || open.includes(i)) return;
+    b.textContent = cards[i]; open.push(i);
+    if (open.length === 2) {
+      moves++; $('mv').textContent = moves; lock = true;
+      const [a, c] = open, ba = mbox.querySelector(`[data-i="${a}"]`), bc = mbox.querySelector(`[data-i="${c}"]`);
+      if (cards[a] === cards[c]) { [ba, bc].forEach(x => { x.dataset.done = 1; x.style.background = 'rgba(74,222,128,.35)'; }); open = []; lock = false; done += 2;
+        if (done === cards.length) setTimeout(() => {
+          const pts = Math.max(5, 30 - (moves - 6) * 2), nb = saveBest('memory', moves, true);
+          openModal(`${gameTitle('🃏 짝 맞추기 완료!', 'memory', '번')}<p style="font-size:24px;text-align:center">${moves}번 만에 성공 ${nb ? '🎉 새 기록!' : ''}</p><div class="choices"><button class="btn primary" id="again">다시 하기</button><button class="btn" data-close>닫기</button></div>`);
+          addScore(pts, '짝 맞추기'); $('again').onclick = memoryGame;
+        }, 400);
+      } else setTimeout(() => { ba.textContent = bc.textContent = '❔'; open = []; lock = false; }, 700);
+    }
+  });
+}
+// 🔢 1→16 터치
+function numbersGame() {
+  const nums = shuffle([...Array(16)].map((_, i) => i + 1)); let next = 1, t0 = 0, timer = 0;
+  openModal(`${gameTitle('🔢 1→16 빨리 누르기', 'numbers', '초')}<p style="margin:0 0 8px;color:var(--muted);font-size:13px">1부터 16까지 순서대로 눌러요 · 다음: <b id="nx">1</b> · ⏱ <b id="tmr">0.0</b>초</p><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${nums.map(n => `<button class="btn" data-n="${n}" style="height:58px;font-size:22px">${n}</button>`).join('')}</div><div style="text-align:right;margin-top:10px"><button class="btn" data-close>그만하기</button></div>`);
+  mbox.querySelectorAll('[data-n]').forEach(b => b.onclick = () => {
+    if (+b.dataset.n !== next) { b.style.background = '#dc2626'; setTimeout(() => b.style.background = '', 250); return; }
+    if (next === 1) { t0 = performance.now(); timer = setInterval(() => { if (!$('tmr')) return clearInterval(timer); $('tmr').textContent = ((performance.now() - t0) / 1000).toFixed(1); }, 100); }
+    b.style.visibility = 'hidden'; next++; $('nx').textContent = next <= 16 ? next : '끝!';
+    if (next > 16) {
+      clearInterval(timer); const sec = +((performance.now() - t0) / 1000).toFixed(1), pts = sec < 15 ? 20 : sec < 25 ? 12 : 6, nb = saveBest('numbers', sec, true);
+      setTimeout(() => { openModal(`${gameTitle('🔢 완료!', 'numbers', '초')}<p style="font-size:28px;text-align:center">${sec}초 ${nb ? '🎉 새 기록!' : ''}</p><div class="choices"><button class="btn primary" id="again">다시 하기</button><button class="btn" data-close>닫기</button></div>`); addScore(pts, '1→16 게임'); $('again').onclick = numbersGame; }, 300);
+    }
+  });
+}
+const GAME_FN = { reaction: reactionGame, memory: memoryGame, numbers: numbersGame };
+ARCADES.forEach(a => INTERACTS.push({ x: a.ix, z: a.iz, label: `E: 🎮 ${a.title} 게임하기`, act: () => GAME_FN[a.key]() }));
+
 // ---------- ⚽ 운동장 축구 ----------
 const FIELD = { x0: -37.5, x1: 37.5, z0: 59.6, z1: 92.4, goalX: 34, gz0: 73.3, gz1: 78.7, cz: 76 };
 const bv = { x: 0, z: 0 }; // 공 속도
@@ -932,11 +1133,30 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => keys[e.code] = false);
 let yaw = 0, pitch = .45, dist = 11, drag = null;
-$('c').addEventListener('pointerdown', e => drag = { x: e.clientX, y: e.clientY });
-addEventListener('pointerup', () => drag = null);
-addEventListener('pointermove', e => { if (!drag) return; yaw -= (e.clientX - drag.x) * .005; pitch = Math.min(1.3, Math.max(.1, pitch + (e.clientY - drag.y) * .004)); drag = { x: e.clientX, y: e.clientY }; });
+$('c').addEventListener('pointerdown', e => drag = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now() });
+addEventListener('pointerup', e => {
+  // 거의 움직이지 않고 짧게 누르면 '클릭' → 그 지점으로 이동, 끌었으면 시점 회전
+  if (drag && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 6 && performance.now() - drag.t < 450) clickMove(e);
+  drag = null;
+});
+addEventListener('pointermove', e => { if (!drag) return; yaw -= (e.clientX - drag.x) * .005; pitch = Math.min(1.3, Math.max(.1, pitch + (e.clientY - drag.y) * .004)); drag = { ...drag, x: e.clientX, y: e.clientY }; });
+
+// ---------- 🖱 클릭 이동 ----------
+let moveTarget = null, stuckT = 0;
+const raycaster = new THREE.Raycaster(), groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hitV = new THREE.Vector3(), ndc = new THREE.Vector2();
+const moveMark = new THREE.Mesh(new THREE.RingGeometry(.45, .7, 28), new THREE.MeshBasicMaterial({ color: 0x67e8f9, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+moveMark.rotation.x = -Math.PI / 2; moveMark.visible = false; scene.add(moveMark);
+function clickMove(e) {
+  if (!started || !me || modalOpen) return;
+  ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  raycaster.setFromCamera(ndc, camera);
+  if (!raycaster.ray.intersectPlane(groundPlane, hitV)) return;
+  const lim = WORLD - 2; if (Math.abs(hitV.x) > lim || Math.abs(hitV.z) > lim) return;
+  moveTarget = { x: hitV.x, z: hitV.z }; stuckT = 0;
+  moveMark.position.set(hitV.x, .4, hitV.z); moveMark.visible = true; moveMark.scale.setScalar(1.6);
+}
 // 휠 줌: 가까이 5 ~ 멀리 80 (멀수록 더 크게 움직이도록 비율로 조절). 채팅창 스크롤 때는 줌하지 않음
-const ZOOM_MIN = 5, ZOOM_MAX = 80;
+const ZOOM_MIN = 5, ZOOM_MAX = 120;
 $('c').addEventListener('wheel', e => { e.preventDefault(); dist = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, dist * (1 + Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 120) * .0015))); }, { passive: false });
 
 // ---------- Start ----------
@@ -1205,7 +1425,7 @@ const TIMETABLE = [ // [요일][교시] (점심 제외 6교시)
   ['역사', '영어', '수학', '과학', '국어', '체육'],
   ['과학', '수학', '국어', '역사', '영어', '동아리'],
 ];
-const SUBJECT_ZONE = { 과학: 'science', 수학: 'math', 역사: 'history', 사회: 'history', 체육: 'ground', 국어: 'lecture', 영어: 'lecture', 창체: 'lecture', 음악: 'lecture', 미술: 'lecture', 동아리: 'plaza' };
+const SUBJECT_ZONE = { 과학: 'science', 수학: 'math', 역사: 'history', 사회: 'history', 체육: 'ground', 국어: 'lecture', 영어: 'english', 창체: 'lecture', 음악: 'lecture', 미술: 'lecture', 동아리: 'game' };
 const SUBJECT_EMOJI = { 국어: '📖', 수학: '➗', 과학: '🔭', 사회: '🌏', 역사: '🏛', 영어: '🔤', 체육: '⚽', 음악: '🎵', 미술: '🎨', 창체: '🌱', 동아리: '🎲' };
 const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
 function showTimetable() {
@@ -1320,7 +1540,7 @@ tickKst();
 function tick() {
   requestAnimationFrame(tick);
   const dt = Math.min(clock.getDelta(), .05), T = clock.elapsedTime;
-  updateSpace(dt, T); updateAstronauts(dt, T);
+  updateSpace(dt, T); updateAstronauts(dt, T); updateZonesDecor(dt, T);
   pl.forEach(p => { p.a += p.sp * dt; p.m.position.set(Math.cos(p.a) * p.d, 0, Math.sin(p.a) * p.d); });
   scene.traverse(o => { if (o.userData.spin) o.rotation.y += dt; });
   pdisk.material.opacity = .5 + Math.sin(T * 4) * .5;
@@ -1331,9 +1551,23 @@ function tick() {
     // player move
     let f = 0, r = 0;
     if (!modalOpen) { if (keys.KeyW || keys.ArrowUp) f++; if (keys.KeyS || keys.ArrowDown) f--; if (keys.KeyA || keys.ArrowLeft) r--; if (keys.KeyD || keys.ArrowRight) r++; }
-    const moving = f || r;
+    let moving = f || r;
     me.vx = me.vz = 0;
-    if (moving) {
+    if (moving && moveTarget) { moveTarget = null; moveMark.visible = false; } // 키보드를 누르면 클릭 이동 취소
+    if (!moving && moveTarget && !modalOpen) { // 클릭한 곳으로 걸어가기
+      const p = me.g.position, dx = moveTarget.x - p.x, dz = moveTarget.z - p.z, d = Math.hypot(dx, dz);
+      if (d < .35) { moveTarget = null; moveMark.visible = false; }
+      else {
+        if (sitting) { sitting = false; p.y = 0; markSeat(me, false); }
+        const sp = (keys.ShiftLeft ? 10 : 6), s = Math.min(d, sp * dt), ox = p.x, oz = p.z;
+        p.x += dx / d * s; p.z += dz / d * s; collide(p); me.g.rotation.y = Math.atan2(dx, dz);
+        me.vx = (p.x - ox) / dt; me.vz = (p.z - oz) / dt; moving = true;
+        // 벽이나 물건에 막혀 거의 못 움직이면 멈춤
+        if (Math.hypot(p.x - ox, p.z - oz) < s * .2) { stuckT += dt; if (stuckT > .6) { moveTarget = null; moveMark.visible = false; } } else stuckT = 0;
+      }
+    }
+    if (moveMark.visible) { moveMark.scale.setScalar(Math.max(1, moveMark.scale.x - dt * 3)); moveMark.material.opacity = .55 + Math.sin(clock.elapsedTime * 8) * .35; }
+    if (f || r) {
       if (sitting) { sitting = false; me.g.position.y = 0; markSeat(me, false); }
       const fx = -Math.sin(yaw), fz = -Math.cos(yaw), len = Math.hypot(f, r), sp = (keys.ShiftLeft ? 10 : 6) * dt / len;
       const dx = (fx * f - fz * r) * sp, dz = (fz * f + fx * r) * sp;
@@ -1362,7 +1596,8 @@ function tick() {
     rankT -= dt; if (rankT < 0) { rankT = 1; renderRank(); drawMini(); }
     // tags
     autoGatherT -= dt; if (autoGatherT < 0) { autoGatherT = 180; if (!soccer.on) gatherToLecture(); }
-    for (const ent of new Set([me, teacher, ...mates, ...net.remotes.values()])) {
+    updateNpcs(dt);
+    for (const ent of new Set([me, teacher, ...mates, ...net.remotes.values(), ...npcs])) {
       tmpV.copy(ent.g.position); tmpV.y += 2.7; tmpV.project(camera);
       const vis = tmpV.z < 1 && ent.g.position.distanceTo(camera.position) < 45;
       ent.tag.style.display = vis ? 'block' : 'none';
